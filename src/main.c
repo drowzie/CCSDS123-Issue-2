@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "utils/include/utilities.h"
 #include "predictor/include/predictor.h"
 
-#define modR(x, R) (int) (x + pow(2,R-1)) % (int) pow(2,R) - (int) pow(2,R-1)
 
 void insertTestData(int * sample){
 	sample[offset(0,0,0)] = 125;
@@ -59,9 +59,9 @@ int main(int argc, char const *argv[])
 	int * localsum = (int*) malloc(xSize*ySize*zSize*sizeof(int));
 	insertTestData(sample);
 	wideNeighborLocalSum(sample, localsum);
-	//printArray(sample);
+	printArray(sample);
 	printf("\nLOCAL SUM ARRAY\n\n");
-	//printArray(localsum);
-	printf("%d\n", modR(5,32));
+	printArray(localsum);
+	printf("%lld\n", modR(5,32));
 	return 0;
 }

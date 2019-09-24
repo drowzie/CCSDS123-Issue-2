@@ -4,4 +4,4 @@
 
 #define clip(x, xmin, xmax) (((x) < (xmin)) ? (xmin) : ((x) > (xmax) ? xmax : x))
 
-#define modR(x, R) ((int) (x + pow(2,R-1)) % (int) pow(2,R) - (int) pow(2,R-1))
+long long modR(long long x, long long R);
