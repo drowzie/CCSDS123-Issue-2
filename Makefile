@@ -1,5 +1,6 @@
 csrc = $(wildcard src/*.c) \
        $(wildcard src/predictor/*.c) \
+	   $(wildcard src/cliparser/*.c) \
        $(wildcard src/utils/*.c)
 
 headers = $(wildcard src/predictor/include/*.h) \
