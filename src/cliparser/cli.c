@@ -12,9 +12,9 @@ static char args_doc[] = "[FILENAME]...";
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, 0, "Calculate in Full Prediction Mode"},
 	{ "Prediction Bands", 'p', "PBANDS", 0, "How many preceding spectral bands to use. Any number between 0 to 16"},
-    { "x", 'xSize', "xSIZE", 0, "x size of image"},
-    { "y", 'ySize', "ySIZE", 0, "y size of image"},
-    { "z", 'zSize', "zSIZE", 0, "z size of image"},
+    { "xSize", 'x', "xSIZE", 0, "x size of image"},
+    { "ySize", 'y', "ySIZE", 0, "y size of image"},
+    { "zSize", 'z', "zSIZE", 0, "z size of image"},
     
     { 0 } 
 };
