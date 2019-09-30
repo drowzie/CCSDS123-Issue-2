@@ -11,7 +11,7 @@ obj = $(csrc:.c=.o)
 LDFLAGS = -g -Wall -lm
 
 main: $(obj)
-	$(CXX) $(headers) -o $@ $^ $(LDFLAGS)
+	$(CC) $(headers) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
 clean:
