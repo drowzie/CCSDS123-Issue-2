@@ -1,13 +1,9 @@
 
-// Config file
-#include "config/include/config.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 #include "cliparser/include/cli.h"
-#include "utils/include/utilities.h"
 #include "predictor/include/predictor.h"
 
 
@@ -38,26 +34,11 @@ void insertTestData(int * sample, struct arguments * args){
 	sample[offset(2,2,1, args)] = 232;
 }
 
-void printArray(int * sample, struct arguments * args) {
-	for (int z = 0; z < args->zSize; z++)
-	{
-		printf("Z=%d\n\n", z);
-		for (int y = 0; y < args->ySize; y++)
-		{
-			for (int x = 0; x < args->xSize; x++)
-			{
-				printf("%d ", sample[offset(x,y,z,args)]);
-			}
-			printf("\n");
-		}
-	}
-}
-
 
 
 int main(int argc, char **argv)
 {
-	
+
 	/*
 		Parse arguments. --h to see what available arguments(declared in cli.c)
 	*/
@@ -65,29 +46,14 @@ int main(int argc, char **argv)
 	parseArguments(argc, argv, &args);
 	printf("%d", args.precedingBands);
 
-
 	// Create Test Data
 	int * sample = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
-	int * localsum = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
+	int * residuals = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
 	insertTestData(sample, &args);
+	predict(&args,sample,residuals);
 
-	for (int z = 0; z < args.zSize; z++)
-	{
-		for (int y = 0; y < args.ySize; y++)
-		{
-			for (int x = 0; x < args.xSize; x++)
-			{
-				wideNeighborLocalSum(sample, localsum, x, y , z, &args);
 
-			}
-			
-		}
-		
-	}
-	
-	printArray(sample, &args);
-	printf("\nLOCAL SUM ARRAY\n\n");
-	//printArray(localsum, &args);
-	//printf("%lld\n", modR(5,32));
+	free(sample);
+
 	return 0;
 }
