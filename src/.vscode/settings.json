@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "config.h": "c",
+        "cli.h": "c",
+        "utilities.h": "c",
+        "localdiffrences.h": "c",
+        "math.h": "c",
+        "localsum.h": "c"
+    }
+}
