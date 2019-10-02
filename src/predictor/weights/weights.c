@@ -27,7 +27,6 @@ void init_weights(int * weights, int z, struct arguments * parameters) {
 void update_weights(int ** weights, int ** localDiffrences,int error, int x, int y, int z, struct arguments * parameters) {
     
 
-    int weight_limit = 0x1 << (parameters->weightResolution + 2);
     int signError = sgnplus(error);
     int scalingExp = parameters->weightMin + ((int)(y*parameters->xSize + x - parameters->xSize))/parameters->weightInterval;
     scalingExp = clip(scalingExp, parameters->weightMin, parameters->weightMax);
@@ -36,14 +35,22 @@ void update_weights(int ** weights, int ** localDiffrences,int error, int x, int
     if(z > 0) {
         int cur_pred_bands = z < parameters->precedingBands ? z : parameters->precedingBands;
         for(int i = 0; i < cur_pred_bands; i++) { 
-
             if(scalingExp > 0) {
                 // Central
                 weights[i][0] = weights[i][0] + (((signError * localDiffrences[0][z-i-1] >> scalingExp) + 1) >> 1);
             } else {
                 weights[i][0] = weights[i][0] + (((signError * localDiffrences[0][z-i-1] << -1*scalingExp) + 1) >> 1);
             }
+            int weightLimit = 0x1 << (parameters->weightResolution + 2);
+            weights[i] = clip(weights[i], (-1 * weightLimit), (weightLimit -1));
 
+            if(parameters->mode == FULL) {
+                if(scalingExp > 0) {
+                    
+                } else {
+                    
+                }
+            }
         }
     }
 }
