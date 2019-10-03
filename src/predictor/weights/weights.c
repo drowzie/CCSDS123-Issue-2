@@ -3,28 +3,21 @@
 #include "../utils/include/utilities.h"
 
 /*
-    Startup weights for each Z band. 
+    Initial weights for each Z band. 
 */
 
-void init_weights(int * weights, int z, struct arguments * parameters) {
-
+void initWeights(int ** weights, int z, struct arguments * parameters) {
     if(parameters->precedingBands > 0){
-        weights[0] = 7 << (parameters->weightResolution - 3);
+        weights[0][0] = 7 << (parameters->weightResolution - 3);
         for(int i = 1; i < parameters->precedingBands; i++){
-            weights[i] = weights[i - 1] >> 3;
+            weights[i][0] = weights[i - 1][0] >> 3;
         }   
-    }
-
-    if(parameters->mode != REDUCED){
-        for(int i = 0; i < 3; i++){
-            weights[parameters->precedingBands + i] = 0;
-        }
     }
 }
 /* 
     Update_weights will update weights according to chapter 4.10 in Issue 2
  */
-void update_weights(int ** weights, int ** localDiffrences,int error, int x, int y, int z, struct arguments * parameters) {
+void updateWeightVector(int ** weights, int ** localDiffrences,int error, int x, int y, int z, struct arguments * parameters) {
     
 
     int signError = sgnplus(error);
@@ -35,21 +28,14 @@ void update_weights(int ** weights, int ** localDiffrences,int error, int x, int
     if(z > 0) {
         int cur_pred_bands = z < parameters->precedingBands ? z : parameters->precedingBands;
         for(int i = 0; i < cur_pred_bands; i++) { 
-            if(scalingExp > 0) {
-                // Central
-                weights[i][0] = weights[i][0] + (((signError * localDiffrences[0][z-i-1] >> scalingExp) + 1) >> 1);
-            } else {
-                weights[i][0] = weights[i][0] + (((signError * localDiffrences[0][z-i-1] << -1*scalingExp) + 1) >> 1);
-            }
-            int weightLimit = 0x1 << (parameters->weightResolution + 2);
-            weights[i] = clip(weights[i], (-1 * weightLimit), (weightLimit -1));
-
-            if(parameters->mode == FULL) {
+            for (int j = 0; j < (parameters->mode != REDUCED ? 4 : 1); j++) {
                 if(scalingExp > 0) {
-                    
+                    weights[i][j] = weights[i][j] + (((signError * localDiffrences[0][z-i-1] >> scalingExp) + 1) >> 1);
                 } else {
-                    
+                    weights[i][j] = weights[i][j] + (((signError * localDiffrences[0][z-i-1] << -1*scalingExp) + 1) >> 1);
                 }
+            int weightLimit = 0x1 << (parameters->weightResolution + 2);
+            weights[i][j] = clip(weights[i][j], (-1 * weightLimit), (weightLimit -1));
             }
         }
     }

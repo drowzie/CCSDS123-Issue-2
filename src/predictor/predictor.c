@@ -2,6 +2,7 @@
 #include "localdiffrences/include/localdiffrences.h"
 #include "utils/include/utilities.h"
 #include "localsum/include/localsum.h"
+#include "weights/include/weights.h"
 
 #include "../cliparser/include/cli.h"
 #include <stdio.h>
@@ -10,15 +11,16 @@
 void predict(struct arguments * parameters, int * inputSample, unsigned short int * residuals) {
 
 	// Init Stuff
-	int * localsum = (int*) malloc(parameters->xSize*parameters->ySize*parameters->zSize*sizeof(int));
+	int * localsum = (int*) calloc(parameters->xSize*parameters->ySize*parameters->zSize, sizeof(int));
 	if(localsum == NULL){
         fprintf(stderr, "Error in allocating the localsum\n");
         exit(EXIT_FAILURE);
     }
 
-	int ** weights = (int **) malloc(sizeof(int *) * (parameters->mode != REDUCED ? 4 : 1));
+
+	int ** weights = (int **) calloc((parameters->mode != REDUCED ? 4 : 1), sizeof(int *));
     for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
-         weights[i] = (int *)malloc((parameters->mode != REDUCED ? 4 : 1) * sizeof(int)); 
+         weights[i] = (int *)calloc((parameters->mode != REDUCED ? 4 : 1), sizeof(int)); 
     }
     if(weights == NULL){
         fprintf(stderr, "Error in allocating the weights\n");
