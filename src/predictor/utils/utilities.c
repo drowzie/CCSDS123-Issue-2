@@ -22,6 +22,21 @@ void printArray(int * sample, struct arguments * args) {
 	}
 }
 
+void printVectors(int ** vector, struct arguments * parameters) {
+	if(parameters->mode == FULL) {
+	printf("N DIFFRENCE: %d \n", vector[1][0]);
+	printf("W DIFFRENCE: %d \n", vector[2][0]);
+	printf("NW DIFFRENCE: %d \n", vector[3][0]);
+	printf("Central Diffrences: ");
+	}
+	for (int i = 0; i < parameters->precedingBands; i++)
+	{
+		printf("%d ", vector[0][i]);
+	}
+	printf("\n");
+	
+}
+
 int offset(int x, int y, int z, struct arguments * args) { 
     return (z * args->xSize * args->ySize) + (y * args->xSize) + x; 
 }

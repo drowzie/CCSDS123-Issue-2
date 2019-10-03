@@ -5,8 +5,8 @@ struct arguments {
     int precedingBands;
 
     // User parameters
-    unsigned char dynamicRange;
-    unsigned char registerSize;
+    unsigned char dynamicRange; // D register
+    unsigned char registerSize; // R register
     // Weight parameters
     unsigned char weightResolution;
     int weightInterval;

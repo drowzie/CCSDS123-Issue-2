@@ -12,16 +12,21 @@ void predict(struct arguments * parameters, int * inputSample, unsigned short in
 
 	// Init Stuff
 	int * localsum = (int*) calloc(parameters->xSize*parameters->ySize*parameters->zSize, sizeof(int));
-	if(localsum == NULL){
+	if(localsum == NULL) {
         fprintf(stderr, "Error in allocating the localsum\n");
         exit(EXIT_FAILURE);
     }
 
-
 	int ** weights = (int **) calloc((parameters->mode != REDUCED ? 4 : 1), sizeof(int *));
     for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
-         weights[i] = (int *)calloc((parameters->mode != REDUCED ? 4 : 1), sizeof(int)); 
+         weights[i] = (int *)calloc((i == 4 ? parameters->precedingBands : 1), sizeof(int)); 
     }
+
+	int ** diffVector = (int **) calloc((parameters->mode != REDUCED ? 4 : 1), sizeof(int *));
+    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
+         diffVector[i] = (int *)calloc((i == 4 ? parameters->precedingBands : 1), sizeof(int)); 
+    }
+
     if(weights == NULL){
         fprintf(stderr, "Error in allocating the weights\n");
         exit(EXIT_FAILURE);
@@ -34,10 +39,14 @@ void predict(struct arguments * parameters, int * inputSample, unsigned short in
 		{
 			for (int x = 0; x < parameters->xSize; x++)
 			{
-				wideNeighborLocalSum(inputSample, localsum, x, y , z, parameters);
+				printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
+				wideNeighborLocalSum(inputSample,localsum,x,y,z,parameters);
+				BuildDiffVector(inputSample,localsum,diffVector,x,y,z,parameters);
+				printVectors(diffVector, parameters);
 			}
 		}
 	}
+	printArray(inputSample, parameters);
 	printArray(localsum, parameters);
 	printf("\nLOCAL SUM ARRAY\n\n");
 
