@@ -9,8 +9,8 @@
 */
 
 void BuildDiffVector(int * sample, int * localsum, int ** diffVector, int x, int y, int z, struct arguments * parameters) {
-	int cur_pred_bands = z < parameters->precedingBands ? z : parameters->precedingBands;
-	for (int i = 0; i < cur_pred_bands; i++) {
+	int currentPredBands = z < parameters->precedingBands ? z : parameters->precedingBands;
+	for (int i = 0; i < currentPredBands; i++) {
 		diffVector[0][i] = centralLocalDiffrence(sample, localsum, x, y, z-i-1, parameters);
 	}
 	if (parameters->mode == FULL) {

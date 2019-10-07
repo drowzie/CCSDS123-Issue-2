@@ -27,8 +27,8 @@ void updateWeightVector(int ** weights, int ** diffVector, int error, int x, int
     //TODO: Add sigma for scaling exp: Note 2 diffrent sigma for directional and central diffrences
 
     if(z > 0) {
-        int cur_pred_bands = z < parameters->precedingBands ? z : parameters->precedingBands;
-        for(int i = 0; i < cur_pred_bands; i++) { 
+        int currentPredBands = z < parameters->precedingBands ? z : parameters->precedingBands;
+        for(int i = 0; i < currentPredBands; i++) { 
             if(scalingExp > 0) {
                 weights[0][i] = weights[0][i] + (((signError * diffVector[0][z-i-1] >> scalingExp) + 1) >> 1);
             } else {
