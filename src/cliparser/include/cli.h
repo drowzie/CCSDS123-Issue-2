@@ -7,6 +7,8 @@ struct arguments {
     // User parameters
     unsigned char dynamicRange; // D register
     unsigned char registerSize; // R register
+    // Sample represantation
+    int theta;
     // Weight parameters
     unsigned char weightResolution;
     int weightInterval;

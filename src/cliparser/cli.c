@@ -11,9 +11,10 @@ static char args_doc[] = "";
 
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, OPTION_ARG_OPTIONAL, "Calculate in Full Prediction Mode (DEFAULT=REDUCED)"},
-    { "Dynamic Range", 'd', "DYNRANGE", 0, "Register D size, choose value between 2-16"},
+    { "Dynamic Range", 'd', "DYNRANGE", 0, "Register D size, #2-16"},
+    { "Sample resolution", 's', "SRES", 0, "Sample Resolution(Θ), #0-4"},
 	{ "Prediction Bands", 'p', "PBANDS", 0, "How many preceding spectral bands to use. #0-16"},
-    { "Weight resolution", 'w', "WRES", 0, "How many bits to represent weight"},
+    { "Weight resolution", 'w', "WRES", 0, "Weight Resolution(Omega), #4-19"},
     { "Weight interval", 't', "Winterval", 0, "Chapter 4.8.2, CCSDS Issue 2"},
     { "Vmin", 'v', "vMin", 0, "Chapter 4.8.2, CCSDS Issue 2"},
     { "Vmax", 'm', "vMax", 0, "Chapter 4.8.2, CCSDS Issue 2"},
@@ -24,10 +25,6 @@ static struct argp_option options[] = {
     { 0 } 
 };
 
-
-    int weight_interval;
-    char weight_initial;
-    char weight_final;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct arguments *arguments = state->input;
@@ -51,6 +48,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->dynamicRange = 2;
 	arguments->precedingBands = 0;
     arguments->weightResolution = 0;
+    arguments->theta = 0;
     arguments->xSize = 3;
     arguments->ySize = 3;
     arguments->zSize = 2;

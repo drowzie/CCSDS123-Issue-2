@@ -38,13 +38,12 @@ void insertTestData(int * sample, struct arguments * args){
 
 int main(int argc, char **argv)
 {
-
 	/*
 		Parse arguments. --h to see what available arguments(declared in cli.c)
 	*/
+
 	struct arguments args;
 	parseArguments(argc, argv, &args);
-	printf("%d", args.precedingBands);
 
 	// Create Test Data
 	int * sample = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
