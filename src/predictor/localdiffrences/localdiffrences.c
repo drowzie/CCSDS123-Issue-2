@@ -30,50 +30,38 @@ int centralLocalDiffrence(int * sample, int * localsum, int x, int y, int z, str
 
 
 int northLocalDiffrence(int * sample, int * localsum, int x, int y, int z, struct arguments * parameters) {
-	if(!(x == 0 && y == 0)) {
-		if (y > 0) {
-			return ((4 * sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
-		} else if (y == 0) {
-			return 0;
-		} else {
-			printf("northLocalDiffrence should not arrive here\n");
-			exit(EXIT_FAILURE);
-		}
-	} else	{
+	if (y > 0) {
+		return ((4 * sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
+	} else if (y == 0 || (x == 0 && y == 0)) {
 		return 0;
+	} else {
+		printf("northLocalDiffrence should not arrive here\n");
+		exit(EXIT_FAILURE);
 	}
 }
 
 int westLocalDiffrence(int * sample, int * localsum, int x, int y, int z, struct arguments * parameters) {
-	if(!(x == 0 && y == 0)) {
-		if ( x > 0 && y > 0) {
-			return ((4 * sample[offset(x-1,y,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
-		} else if (x == 0 && y > 0) {
-			return ((4 * sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
-		} else if (y == 0) {
-			return 0;
-		} else {
-			printf("westLocalDiffrence should not arrive here\n");
-			exit(EXIT_FAILURE);
-		}
-	} else {
+	if ( x > 0 && y > 0) {
+		return ((4 * sample[offset(x-1,y,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
+	} else if (x == 0 && y > 0) {
+		return ((4 * sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
+	} else if (y == 0 || (x == 0 && y == 0)) {
 		return 0;
+	} else {
+		printf("westLocalDiffrence should not arrive here\n");
+		exit(EXIT_FAILURE);
 	}
 }
 
 int northwestLocalDiffrence(int * sample, int * localsum, int x, int y, int z, struct arguments * parameters) {
-	if(!(x == 0 && y == 0)) {
-		if (x > 0 && y > 0) {
-			return ((4* sample[offset(x-1,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
-		} else if (x == 0 && y > 0) {
-			return ((4* sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
-		} else if (y == 0) {
-			return 0;
-		} else {
-			printf("northwestLocalDiffrence should not arrive here\n");
-			exit(EXIT_FAILURE);
-		}
-	} else {
+	if (x > 0 && y > 0) {
+		return ((4* sample[offset(x-1,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
+	} else if (x == 0 && y > 0) {
+		return ((4* sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)]);
+	} else if (y == 0|| (x == 0 && y == 0)) {
 		return 0;
+	} else {
+		printf("northwestLocalDiffrence should not arrive here\n");
+		exit(EXIT_FAILURE);
 	}
 }

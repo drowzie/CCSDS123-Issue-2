@@ -15,7 +15,7 @@ void insertTestData(int * sample, struct arguments * args){
 	sample[offset(0,1,0, args)] = 126;
 	sample[offset(1,1,0, args)] = 126;
 	sample[offset(2,1,0, args)] = 133;
-
+ 
 	sample[offset(0,2,0, args)] = 127;
 	sample[offset(1,2,0, args)] = 127;
 	sample[offset(2,2,0, args)] = 132;

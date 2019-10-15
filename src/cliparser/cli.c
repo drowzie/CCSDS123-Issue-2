@@ -49,7 +49,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
 	arguments->mode = REDUCED;
     arguments->dynamicRange = 2;
 	arguments->precedingBands = 0;
-    arguments->weightResolution = 0;
+    arguments->weightResolution = 2;
     arguments->theta = 0;
     arguments->xSize = 3;
     arguments->ySize = 3;
