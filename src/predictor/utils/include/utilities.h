@@ -7,6 +7,7 @@
 
 #define clip(x, xmin, xmax) (((x) < (xmin)) ? (xmin) : ((x) > (xmax) ? xmax : x))
 
+
 long long modR(long long x, long long R);
 void printArray(int * sample, struct arguments * args);
 void printVectors(int ** vector, struct arguments * parameters);

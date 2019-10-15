@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	parseArguments(argc, argv, &args);
 
 	// Create Test Data
-	int * sample = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
+	unsigned int * sample = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
 	int * residuals = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
 	insertTestData(sample, &args);
 	predict(&args,sample,residuals);
