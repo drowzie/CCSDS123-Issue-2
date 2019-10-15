@@ -7,7 +7,7 @@
     Calloc defaults 0 for directional
 */
 
-void initWeights(int ** weights, int z, struct arguments * parameters) {
+void initWeights(long ** weights, int z, struct arguments * parameters) {
     if(parameters->precedingBands > 0){
         weights[0][0] = 7 << (parameters->weightResolution - 3);
         for(int i = 1; i < parameters->precedingBands; i++){
@@ -18,7 +18,7 @@ void initWeights(int ** weights, int z, struct arguments * parameters) {
 /* 
     Update_weights will update weights according to chapter 4.10 in Issue 2
  */
-void updateWeightVector(int ** weights, int ** diffVector, int error, int x, int y, int z, struct arguments * parameters) {
+void updateWeightVector(long ** weights, int ** diffVector, long long error, int x, int y, int z, struct arguments * parameters) {
     
     int signError = sgnplus(error);
     int scalingExp = parameters->weightMin + ((int)(y*parameters->xSize + x - parameters->xSize))/parameters->weightInterval;

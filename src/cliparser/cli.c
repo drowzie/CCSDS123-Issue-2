@@ -56,7 +56,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->zSize = 2;
     arguments->weightMin = 2;
     arguments->weightMax = 4;
-    arguments->weightInterval = 10000;
+    arguments->weightInterval = 256;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     arguments->registerSize = 32 > arguments->dynamicRange ? 32 : arguments->dynamicRange;
 }
