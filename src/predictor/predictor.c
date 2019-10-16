@@ -57,6 +57,7 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 				printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
 				wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
 				BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
+				//printVectors(diffVector, parameters);
 
 				long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
 				printf("High resolution Sample is %lld \n", highResSample);
@@ -139,7 +140,7 @@ long computePredictedSample(unsigned int * sample, long long * doubleResPredSamp
 			*doubleResPredSample = 2 * sample[offset(x,y,z-1,parameters)];
 		}
 	}
-	return (long) (*doubleResPredSample) >> 1;
+	return (*doubleResPredSample) >> 1;
 }
 
 unsigned int sampleRepresentation(unsigned int * sample, long long * clippedBinCenter, long predictedSample, long quantizedSample, int maximumError, long long highResPredSample, int sampleDamping, int sampleOffset, int x, int y, int z, long long smin, long long smax, struct arguments * parameters) {

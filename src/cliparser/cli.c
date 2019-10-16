@@ -49,14 +49,15 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
 	arguments->mode = REDUCED;
     arguments->dynamicRange = 2;
 	arguments->precedingBands = 0;
-    arguments->weightResolution = 2;
+    arguments->weightResolution = 12;
     arguments->theta = 0;
     arguments->xSize = 4;
-    arguments->ySize = 3;
+    arguments->ySize = 4;
     arguments->zSize = 2;
     arguments->weightMin = 2;
     arguments->weightMax = 4;
     arguments->weightInterval = 256;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
+    arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
     arguments->registerSize = 32 > arguments->dynamicRange ? 32 : arguments->dynamicRange;
 }
