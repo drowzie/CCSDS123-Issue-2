@@ -51,7 +51,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
 	arguments->precedingBands = 0;
     arguments->weightResolution = 2;
     arguments->theta = 0;
-    arguments->xSize = 3;
+    arguments->xSize = 4;
     arguments->ySize = 3;
     arguments->zSize = 2;
     arguments->weightMin = 2;

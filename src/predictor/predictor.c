@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-void predict(struct arguments * parameters, unsigned int * inputSample, unsigned short int * residuals) {
+void predict(struct arguments * parameters, unsigned int * inputSample, unsigned int * residuals) {
 	long  sMin = 0;
     long  sMax = (0x1 << parameters->dynamicRange) - 1;
     long  sMid = 0x1 << (parameters->dynamicRange - 1);
-	printf("sMax %d,SMin %d,smid %d", sMax, sMin, sMid);
+	printf("sMax %ld,SMin %ld,smid %ld", sMax, sMin, sMid);
 	int maxmimumError = 0; // Zero means lossless
 	int sampleDamping = 0;
 	int sampleOffset = 0;
@@ -43,10 +43,8 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 	// Compute predictions
 	long long doubleResPredSample = 0;
 	long long clippedBin = 0;
-	long long highResSample = 0;
 	for (int z = 0; z < parameters->zSize; z++)
 	{
-		long predictedSample = 0;
 		for (int y = 0; y < parameters->ySize; y++)
 		{
 			for (int x = 0; x < parameters->xSize; x++)
@@ -57,30 +55,26 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 				}
 
 				printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
-				/* 
-					Quantization and turning samples into sample represantation stage
-				 */
-				long quantizerIndex = quantization(inputSample, predictedSample, maxmimumError, x, y, z, parameters);
-				printf("Quantization value is %d \n", quantizerIndex);
-				sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, &clippedBin, predictedSample, quantizerIndex, maxmimumError, highResSample, sampleDamping, sampleOffset, x, y, z, sMin, sMax, parameters);
-				printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
-
-				/* 
-					Local Sum Calculations
-				 */
-				
 				wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
 				BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
-				
-				highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
+
+				long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
 				printf("High resolution Sample is %lld \n", highResSample);
-				predictedSample = computePredictedSample(sampleRep, &doubleResPredSample, localsum, weights, diffVector, highResSample, sMid, sMin, sMax, x, y, z, parameters);
-				printf("predicted value is %d \n", predictedSample);
-				
+
+				long predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, weights, diffVector, highResSample, sMid, sMin, sMax, x, y, z, parameters);
+				printf("predicted value is %ld \n", predictedSample);
+
+				long quantizerIndex = quantization(inputSample, predictedSample, maxmimumError, x, y, z, parameters);
+				printf("quantizer index is %ld \n", quantizerIndex);
+
+				sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, &clippedBin, predictedSample, quantizerIndex, maxmimumError, highResSample, sampleDamping, sampleOffset, x, y, z, sMin, sMax, parameters);
+				printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
+				printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
+
 				long long doubleResError = (2 * clippedBin) - doubleResPredSample; 
 				updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
-				unsigned long mappedResidual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maxmimumError, x, y, z, parameters);
-				printf("Mapped residual: %u \n", mappedResidual);
+				residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maxmimumError, x, y, z, parameters);
+				printf("Mapped residual: %u \n", residuals[offset(x,y,z,parameters)]);
 				printf("---------------------------\n");
 
 			}
@@ -90,6 +84,8 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 	printArray(inputSample, parameters);
 	printf("Sample representation \n");
 	printArray(sampleRep, parameters);
+	printf("Mapped residuals \n");
+	printArray(residuals,parameters);
 
 	// Free up stuff
 	free(weights);
@@ -156,8 +152,6 @@ unsigned int sampleRepresentation(unsigned int * sample, long long * clippedBinC
         doubleResSample += ((sampleDamping * highResPredSample) - (sampleDamping << (parameters->weightResolution + 1)));
         doubleResSample = doubleResSample >> (parameters->weightResolution + parameters->theta + 1);
 		doubleResSample = (doubleResSample + 1) >> 1;
-		printf("oeeh %d\n", *clippedBinCenter);
-		printf("oeeh %d\n", doubleResSample);
         return (unsigned int)doubleResSample;
     }
 }
@@ -166,7 +160,7 @@ long long computeHighResPredSample(unsigned int * localSum, long ** weightVector
 	long long diffPredicted = 0;
 	long long predictedSample = 0;
 	diffPredicted = innerProduct(weightVector, diffVector, z, parameters);
-	predictedSample = modR(diffPredicted + ((localSum[offset(x,y,z, parameters)] - (4 * smid)) << parameters->weightResolution), parameters->registerSize);
+	predictedSample = modR(diffPredicted + ((localSum[offset(x,y,z, parameters)] - (smid << 2)) << parameters->weightResolution), parameters->registerSize);
 	predictedSample += (smid << (parameters->weightResolution + 2));
 	predictedSample += (0x1 << (parameters->weightResolution + 1));
 	predictedSample = clip(predictedSample, (smin << (parameters->weightResolution+2)), ((smax << (parameters->weightResolution+2)) + (0x1 << (parameters->weightResolution+1))));
