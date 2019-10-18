@@ -40,3 +40,23 @@ void printVectors(int ** vector, struct arguments * parameters) {
 int offset(int x, int y, int z, struct arguments * args) { 
     return (z * args->xSize * args->ySize) + (y * args->xSize) + x; 
 }
+
+int sgn(long long x) { 
+    if (x > 0) {
+        return 1;
+    } else if(x < 0) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+long long clip( long long x, long long xmin, long long xmax)  {
+    if (x > xmax) {
+        return xmax;
+    } else if(x < xmin) {
+        return xmin;
+    } else {
+        return x;
+    }
+}

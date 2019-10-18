@@ -35,7 +35,7 @@ void updateWeightVector(long ** weights, int ** diffVector, long long error, int
                 weights[0][i] = weights[0][i] + (((signError * diffVector[0][z-i-1] << -1*scalingExp) + 1) >> 1);
             }
             int weightLimit = 0x1 << (parameters->weightResolution + 2);
-            weights[0][i] = clip(weights[0][i], (-1 * weightLimit), (weightLimit -1));
+            weights[0][i] = (long) clip(weights[0][i], (-1 * weightLimit), (weightLimit -1));
         }
 
         if(parameters->mode == FULL) {
@@ -46,7 +46,7 @@ void updateWeightVector(long ** weights, int ** diffVector, long long error, int
                     weights[i][0] = weights[i][0] + (((signError * diffVector[i][0] << -1*scalingExp) + 1) >> 1);
                 }
                 int weightLimit = 0x1 << (parameters->weightResolution + 2);
-                weights[i][0] = clip(weights[i][0], (-1 * weightLimit), (weightLimit -1));
+                weights[i][0] = (long) clip(weights[i][0], (-1 * weightLimit), (weightLimit -1));
             }
         }
     }

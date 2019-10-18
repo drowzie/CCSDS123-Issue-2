@@ -7,7 +7,7 @@ long long computeHighResPredSample(unsigned int * localSum, long ** weightVector
 
 long long innerProduct(long ** weightVector, int ** diffVector, int z, struct arguments * parameters);
 
-long computePredictedSample(unsigned int * sample, long long * doubleResPredSample, int * localSum, long ** weightVector, int ** diffVector, long long highResPredSample, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters);
+long long computePredictedSample(unsigned int * sample, long long * doubleResPredSample, int * localSum, long ** weightVector, int ** diffVector, long long highResPredSample, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters);
 
 unsigned int sampleRepresentation(unsigned int * sample, long long * clippedBinCenter, long predictedSample, long quantizedSample, int maximumError, long long highResPredSample, int sampleDamping, int sampleOffset, int x, int y, int z, long long smin, long long smax, struct arguments * parameters);
 
