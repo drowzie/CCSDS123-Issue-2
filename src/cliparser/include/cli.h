@@ -18,6 +18,8 @@ struct arguments {
     int xSize;
     int ySize;
     int zSize;
+
+    int debugMode;
 };
 
 void parseArguments(int argc, char **argv, struct arguments * arguments);

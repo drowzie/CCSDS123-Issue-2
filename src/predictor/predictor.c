@@ -8,16 +8,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h> 
 
 void predict(struct arguments * parameters, unsigned int * inputSample, unsigned int * residuals) {
 	long  sMin = 0;
     long  sMax = (0x1 << parameters->dynamicRange) - 1;
     long  sMid = 0x1 << (parameters->dynamicRange - 1);
-	printf("sMax %ld,SMin %ld,smid %ld", sMax, sMin, sMid);
+	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
+	printf("---------------------------\n");
 	int maxmimumError = 0; // Zero means lossless
 	int sampleDamping = 0;
 	int sampleOffset = 0;
-	
+
+
 	// Init Stuff
 	int * localsum = (int*) calloc(parameters->xSize*parameters->ySize*parameters->zSize, sizeof(int));
 	if(localsum == NULL) {
@@ -43,6 +46,11 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 	// Compute predictions
 	long long doubleResPredSample = 0;
 	long long clippedBin = 0;
+	
+
+	struct timespec start, finish;
+	clock_gettime(CLOCK_REALTIME, &start);
+
 	for (int z = 0; z < parameters->zSize; z++)
 	{
 		for (int y = 0; y < parameters->ySize; y++)
@@ -54,33 +62,37 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 					initWeights(weights, z, parameters);
 				}
 
-				printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
 				wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
 				BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
-				//printVectors(diffVector, parameters);
 
 				long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
-				printf("High resolution Sample is %lld \n", highResSample);
 
 				long long predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, weights, diffVector, highResSample, sMid, sMin, sMax, x, y, z, parameters);
-				printf("predicted value is %lld \n", predictedSample);
 
 				long quantizerIndex = quantization(inputSample, predictedSample, maxmimumError, x, y, z, parameters);
-				printf("quantizer to sample is %ld \n", quantizerIndex);
 				
 				sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, &clippedBin, predictedSample, quantizerIndex, maxmimumError, highResSample, sampleDamping, sampleOffset, x, y, z, sMin, sMax, parameters);
-				printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
-				printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
 
 				long long doubleResError = (2 * clippedBin) - doubleResPredSample; 
 				updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
-				residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maxmimumError, x, y, z, parameters);
-				printf("Mapped residual: %u \n", residuals[offset(x,y,z,parameters)]);
-				printf("---------------------------\n");
 
+				residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maxmimumError, x, y, z, parameters);
+
+				if(parameters->debugMode != 0) {
+					printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
+					printVectors(diffVector, parameters);
+					printf("High resolution Sample is %lld \n", highResSample);
+					printf("predicted value is %lld \n", predictedSample);
+					printf("quantizer to sample is %ld \n", quantizerIndex);
+					printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
+					printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
+					printf("Mapped residual: %u \n", residuals[offset(x,y,z,parameters)]);
+					printf("---------------------------\n");
+				}
 			}
 		}
 	}
+
 	printf("Samples \n");
 	printArray(inputSample, parameters);
 	printf("Sample representation \n");
@@ -88,7 +100,28 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 	printf("Mapped residuals \n");
 	printArray(residuals,parameters);
 
+	clock_gettime(CLOCK_REALTIME, &finish);
+	long seconds = finish.tv_sec - start.tv_sec; 
+    long ns = finish.tv_nsec - start.tv_nsec; 
+
+	if (start.tv_nsec > finish.tv_nsec) { // clock underflow 
+		--seconds; 
+		ns += 1000000000; 
+    }
+
+	printf("seconds without ns: %ld\n", seconds); 
+    printf("nanoseconds: %ld\n", ns); 
+    printf("total seconds: %e\n", (double)seconds + (double)ns/(double)1000000000); 
+
 	// Free up stuff
+    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) {
+         free(weights[i]);
+    }
+
+    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
+         free(diffVector[i]);
+    }
+
 	free(weights);
 	free(diffVector);
 	free(localsum);
@@ -105,17 +138,17 @@ long computeMappedQuantizerIndex(long quantizerIndex, long long predictedSample,
 	if (x == 0 && y == 0) {
 		omega = (predictedSample - smin) > (smax - predictedSample) ? (smax - predictedSample) : (predictedSample - smin);
 	} else {
-		long long temp1 = (((predictedSample - smin) + maximumError) / (2 * maximumError + 1));
-		long long temp2 = (((smax - predictedSample ) + maximumError) / (2 * maximumError + 1));
+		long long temp1 = (((predictedSample - smin) + maximumError) / ((maximumError << 1) + 1));
+		long long temp2 = (((smax - predictedSample ) + maximumError) / ((maximumError << 1) + 1));
 		omega = temp1 > temp2 ? temp2 : temp1;
 	}
 
 	if (abs(quantizerIndex) > omega) {
 		return abs(quantizerIndex) + omega;
-	} else if ((signValue*quantizerIndex) <= omega && signValue*quantizerIndex >= 0) {
-		return 2 * abs(quantizerIndex);
+	} else if ((signValue*quantizerIndex) <= omega && (signValue*quantizerIndex >= 0)) {
+		return abs(quantizerIndex) << 1;
 	} else {
-		return 2 * abs(quantizerIndex) - 1;
+		return (abs(quantizerIndex) << 1) - 1;
 	}
 }
 
