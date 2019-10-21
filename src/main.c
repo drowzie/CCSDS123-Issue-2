@@ -10,7 +10,7 @@
 void insertTestData(int * sample, struct arguments * args){
 	sample[offset(0,0,0, args)] = 4;
 	sample[offset(1,0,0, args)] = 4;
-	sample[offset(2,0,0, args)] = 6;
+	sample[offset(2,0,0, args)] = 4;
 	sample[offset(3,0,0, args)] = 9;
 
 	sample[offset(0,1,0, args)] = 3;

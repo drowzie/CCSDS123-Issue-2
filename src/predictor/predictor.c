@@ -16,7 +16,7 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
     long  sMid = 0x1 << (parameters->dynamicRange - 1);
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
 	printf("---------------------------\n");
-	int maxmimumError = 0; // Zero means lossless
+	int maxmimumError = parameters->dynamicRange-1; // Zero means lossless
 	int sampleDamping = 0;
 	int sampleOffset = 0;
 
@@ -133,13 +133,16 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
  */
 
 long computeMappedQuantizerIndex(long quantizerIndex, long long predictedSample, long long doubleResPredSample, long smin, long smax, int maximumError, int x, int y, int z, struct arguments * parameters) {
-	long long omega = 0;
-	int signValue = (doubleResPredSample & 0x1) != 0 ? -1 : 1;
+	unsigned long long omega = 0;
+	unsigned int signValue = (doubleResPredSample & 0x1) != 0 ? -1 : 1;
+	long long temp1 = predictedSample - smin;
+	long long temp2 = smax - predictedSample;
+	
 	if (x == 0 && y == 0) {
-		omega = (predictedSample - smin) > (smax - predictedSample) ? (smax - predictedSample) : (predictedSample - smin);
+		omega = temp1 > temp2 ? temp2 : temp1;
 	} else {
-		long long temp1 = (((predictedSample - smin) + maximumError) / ((maximumError << 1) + 1));
-		long long temp2 = (((smax - predictedSample ) + maximumError) / ((maximumError << 1) + 1));
+		temp1 = ((temp1 + maximumError) / ((maximumError << 1) + 1));
+		temp2 = ((temp2 + maximumError) / ((maximumError << 1) + 1));
 		omega = temp1 > temp2 ? temp2 : temp1;
 	}
 
@@ -151,6 +154,7 @@ long computeMappedQuantizerIndex(long quantizerIndex, long long predictedSample,
 		return (abs(quantizerIndex) << 1) - 1;
 	}
 }
+
 
 long quantization(unsigned int * sample, long long predictedSample, int maximumError, int x, int y, int z, struct arguments * parameters) {
 	long long predictionResidual = sample[offset(x,y,z,parameters)] - predictedSample;
