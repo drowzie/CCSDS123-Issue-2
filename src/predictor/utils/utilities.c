@@ -7,7 +7,22 @@ long long modR(long long x, long long R){
     return ((x + power2) - (((((x + power2) >> (R - 1) >> 1)) << (R - 1)) << 1)) - power2;
 }
 
-void printArray(unsigned int * sample, struct arguments * args) {
+void printArrayLong(unsigned long * sample, struct arguments * args) {
+	for (int z = 0; z < args->zSize; z++)
+	{
+		printf("Z=%d\n\n", z);
+		for (int y = 0; y < args->ySize; y++)
+		{
+			for (int x = 0; x < args->xSize; x++)
+			{
+				printf("%lu ", sample[offset(x,y,z,args)]);
+			}
+			printf("\n");
+		}
+	}
+}
+
+void printArrayInt(unsigned int * sample, struct arguments * args) {
 	for (int z = 0; z < args->zSize; z++)
 	{
 		printf("Z=%d\n\n", z);

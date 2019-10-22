@@ -61,6 +61,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->weightInterval = 256;
     arguments->debugMode = 0;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
+    // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
-    arguments->registerSize = 32 > arguments->dynamicRange ? 32 : arguments->dynamicRange;
+    arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
 }

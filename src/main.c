@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
 	// Create Test Data
 	unsigned int * sample = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(unsigned int));
-	unsigned int * residuals = (int*) malloc(args.xSize*args.ySize*args.zSize*sizeof(int));
+	unsigned long * residuals = (long*) malloc(args.xSize*args.ySize*args.zSize*sizeof(unsigned long));
 	insertTestData(sample, &args);
 	predict(&args,sample,residuals);
 

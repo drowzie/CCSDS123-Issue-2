@@ -10,13 +10,13 @@
 #include <math.h>
 #include <time.h> 
 
-void predict(struct arguments * parameters, unsigned int * inputSample, unsigned int * residuals) {
+void predict(struct arguments * parameters, unsigned int * inputSample, unsigned long * residuals) {
 	long  sMin = 0;
     long  sMax = (0x1 << parameters->dynamicRange) - 1;
     long  sMid = 0x1 << (parameters->dynamicRange - 1);
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
 	printf("---------------------------\n");
-	int maxmimumError = parameters->dynamicRange-1; // Zero means lossless
+	int maxmimumError = 0; // Zero means lossless
 	int sampleDamping = 0;
 	int sampleOffset = 0;
 
@@ -86,7 +86,7 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 					printf("quantizer to sample is %ld \n", quantizerIndex);
 					printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
 					printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
-					printf("Mapped residual: %u \n", residuals[offset(x,y,z,parameters)]);
+					printf("Mapped residual: %lu \n", residuals[offset(x,y,z,parameters)]);
 					printf("---------------------------\n");
 				}
 			}
@@ -94,11 +94,11 @@ void predict(struct arguments * parameters, unsigned int * inputSample, unsigned
 	}
 
 	printf("Samples \n");
-	printArray(inputSample, parameters);
+	printArrayInt(inputSample, parameters);
 	printf("Sample representation \n");
-	printArray(sampleRep, parameters);
+	printArrayInt(sampleRep, parameters);
 	printf("Mapped residuals \n");
-	printArray(residuals,parameters);
+	printArrayLong(residuals,parameters);
 
 	clock_gettime(CLOCK_REALTIME, &finish);
 	long seconds = finish.tv_sec - start.tv_sec; 
@@ -187,7 +187,7 @@ unsigned int sampleRepresentation(unsigned int * sample, long long * clippedBinC
         return sample[offset(x,y,z,parameters)];
     } else {
         long long doubleResSample = 0;
-        *clippedBinCenter = clip(predictedSample + (quantizedSample*((maximumError * 2) + 1)), smin, smax);
+        *clippedBinCenter = clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), smin, smax);
         doubleResSample = ( 4 * ((0x1 << parameters->theta) - sampleDamping)) * ((*clippedBinCenter << parameters->weightResolution) - ((sgn(quantizedSample) * maximumError * sampleOffset) << (parameters->weightResolution - parameters->theta)));
         doubleResSample += ((sampleDamping * highResPredSample) - (sampleDamping << (parameters->weightResolution + 1)));
         doubleResSample = doubleResSample >> (parameters->weightResolution + parameters->theta + 1);
@@ -200,11 +200,11 @@ long long computeHighResPredSample(unsigned int * localSum, long ** weightVector
 	long long diffPredicted = 0;
 	long long predictedSample = 0;
 	diffPredicted = innerProduct(weightVector, diffVector, z, parameters);
-	predictedSample = modR(diffPredicted + ((localSum[offset(x,y,z, parameters)] - (smid * 4)) << parameters->weightResolution), parameters->registerSize);
+	predictedSample = modR(diffPredicted + ((localSum[offset(x,y,z, parameters)] - (smid << 2)) << parameters->weightResolution), parameters->registerSize);
 	predictedSample += (smid << (parameters->weightResolution + 2));
 	predictedSample += (1 << (parameters->weightResolution + 1));
 
-	long lowerbounds = (smin << (parameters->weightResolution+2));
+	long lowerbounds = (smin<<(parameters->weightResolution+2));
 	long higherbounds = (smax<<(parameters->weightResolution+1) + 1 << (parameters->weightResolution+1));
 	predictedSample = clip(predictedSample, lowerbounds, higherbounds);
 	return predictedSample;
