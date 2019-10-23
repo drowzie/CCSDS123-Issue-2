@@ -5,6 +5,7 @@
         "utilities.h": "c",
         "localdiffrences.h": "c",
         "math.h": "c",
-        "localsum.h": "c"
+        "localsum.h": "c",
+        "algorithm": "c"
     }
 }
