@@ -18,6 +18,9 @@ struct arguments {
     int xSize;
     int ySize;
     int zSize;
+    // Encoding stuff
+    char initialY;
+    unsigned int initialK;
 
     int debugMode;
 };
