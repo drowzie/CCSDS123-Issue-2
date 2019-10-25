@@ -8,123 +8,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <time.h> 
 
-void predict(struct arguments * parameters, unsigned int * inputSample, unsigned long * residuals) {
-	long  sMin = 0;
-    long  sMax = (0x1 << parameters->dynamicRange) - 1;
-    long  sMid = 0x1 << (parameters->dynamicRange - 1);
-	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
-	printf("---------------------------\n");
-	int maxmimumError = 0; // Zero means lossless
-	int sampleDamping = 0;
-	int sampleOffset = 0;
+long long doubleResPredSample = 0;
+long long clippedBin = 0;
 
+void predict(unsigned int * inputSample, unsigned long * residuals, int x, int y, int z, struct arguments * parameters, unsigned int * sampleRep, int * localsum, 
+int ** diffVector, long ** weights, long sMin, long sMax, long sMid, int maximumError, int sampleDamping, int sampleOffset) {
 
-	// Init Stuff
-	int * localsum = (int*) calloc(parameters->xSize*parameters->ySize*parameters->zSize, sizeof(int));
-	if(localsum == NULL) {
-        fprintf(stderr, "Error in allocating the localsum\n");
-        exit(EXIT_FAILURE);
-    }
-	
-	unsigned int * sampleRep = (int*) malloc(parameters->xSize*parameters->ySize*parameters->zSize*sizeof(unsigned int));
-
-	long ** weights = (long **) malloc((parameters->mode != REDUCED ? 4 : 1) * sizeof(long *));
-    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) {
-         weights[i] = (long *)calloc((i == 4 ? parameters->precedingBands : 1), sizeof(long)); 
-    }
-	int ** diffVector = (int **) malloc((parameters->mode != REDUCED ? 4 : 1) * sizeof(int *));
-    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
-         diffVector[i] = (int *)calloc((i == 4 ? parameters->precedingBands : 1), sizeof(int)); 
-    }
-
-    if(weights == NULL){
-        fprintf(stderr, "Error in allocating the weights\n");
-        exit(EXIT_FAILURE);
-    }
-	// Compute predictions
-	long long doubleResPredSample = 0;
-	long long clippedBin = 0;
-	
-
-	struct timespec start, finish;
-	clock_gettime(CLOCK_REALTIME, &start);
-
-	for (int z = 0; z < parameters->zSize; z++)
-	{
-		for (int y = 0; y < parameters->ySize; y++)
-		{
-			for (int x = 0; x < parameters->xSize; x++)
-			{
-
-				if(x == 0 && y == 0) {
-					initWeights(weights, z, parameters);
-				}
-
-				wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
-				BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
-
-				long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
-
-				long long predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, weights, diffVector, highResSample, sMid, sMin, sMax, x, y, z, parameters);
-
-				long quantizerIndex = quantization(inputSample, predictedSample, maxmimumError, x, y, z, parameters);
-				
-				sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, &clippedBin, predictedSample, quantizerIndex, maxmimumError, highResSample, sampleDamping, sampleOffset, x, y, z, sMin, sMax, parameters);
-
-				long long doubleResError = (2 * clippedBin) - doubleResPredSample; 
-				updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
-
-				residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maxmimumError, x, y, z, parameters);
-
-				if(parameters->debugMode != 0) {
-					printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
-					printVectors(diffVector, parameters);
-					printf("High resolution Sample is %lld \n", highResSample);
-					printf("predicted value is %lld \n", predictedSample);
-					printf("quantizer to sample is %ld \n", quantizerIndex);
-					printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
-					printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
-					printf("Mapped residual: %lu \n", residuals[offset(x,y,z,parameters)]);
-					printf("---------------------------\n");
-				}
-			}
-		}
+	if(x == 0 && y == 0) {
+		initWeights(weights, z, parameters);
 	}
+	
+	/* 
+		Calculate local sum and build up the diffrential vector at a given sample.
+	*/
+	wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
+	BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
 
-	printf("Samples \n");
-	printArrayInt(inputSample, parameters);
-	printf("Sample representation \n");
-	printArrayInt(sampleRep, parameters);
-	printf("Mapped residuals \n");
-	printArrayLong(residuals,parameters);
+	/* 
+		Step for calculating prediction sample
+	*/
+	long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
+	long long predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, weights, diffVector, highResSample, sMid, sMin, sMax, x, y, z, parameters);
 
-	clock_gettime(CLOCK_REALTIME, &finish);
-	long seconds = finish.tv_sec - start.tv_sec; 
-    long ns = finish.tv_nsec - start.tv_nsec; 
+	/* 
+		Quantization/Sample "compression" part
+	*/
+	long quantizerIndex = quantization(inputSample, predictedSample, maximumError, x, y, z, parameters);
+	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, &clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, sampleDamping, sampleOffset, x, y, z, sMin, sMax, parameters);
 
-	if (start.tv_nsec > finish.tv_nsec) { // clock underflow 
-		--seconds; 
-		ns += 1000000000; 
-    }
+	/* 
+		Update Weights and mapping
+	*/
+	long long doubleResError = (2 * clippedBin) - doubleResPredSample; 
+	updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
+	residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maximumError, x, y, z, parameters);
 
-	printf("seconds without ns: %ld\n", seconds); 
-    printf("nanoseconds: %ld\n", ns); 
-    printf("total seconds: %e\n", (double)seconds + (double)ns/(double)1000000000); 
-
-	// Free up stuff
-    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) {
-         free(weights[i]);
-    }
-
-    for (int i=0; i<(parameters->mode != REDUCED ? 4 : 1); i++) { 
-         free(diffVector[i]);
-    }
-
-	free(weights);
-	free(diffVector);
-	free(localsum);
+	if(parameters->debugMode != 0) {
+		printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
+		printVectors(diffVector, parameters);
+		printf("High resolution Sample is %lld \n", highResSample);
+		printf("predicted value is %lld \n", predictedSample);
+		printf("quantizer to sample is %ld \n", quantizerIndex);
+		printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
+		printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
+		printf("Mapped residual: %lu \n", residuals[offset(x,y,z,parameters)]);
+		printf("---------------------------\n");
+	}
 }
 
 

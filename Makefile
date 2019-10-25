@@ -4,6 +4,7 @@ csrc = $(wildcard src/*.c) \
 	   $(wildcard src/predictor/localsum/*.c) \
 	   $(wildcard src/predictor/weights/*.c) \
 	   $(wildcard src/predictor/utils/*.c) \
+	   $(wildcard src/encoder/*.c) \
        $(wildcard src/predictor/localdiffrences/*.c)
 
 

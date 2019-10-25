@@ -1,7 +1,18 @@
 #pragma once
 #include "../../cliparser/include/cli.h"
 
-void predict(struct arguments * args, unsigned int * inputFile, unsigned long * residuals);
+void predict(unsigned int * inputSample,
+    unsigned long * residuals,
+    int x, int y, int z,
+    struct arguments * parameters,
+    unsigned int * sampleRep,
+    int * localsum,
+    int ** diffVector,
+    long ** weights,
+    long sMin, long sMax, long sMid, 
+    int maximumError, int sampleDamping, int sampleOffset);
+
+
 int offset(int x, int y, int z, struct arguments * args);
 long long computeHighResPredSample(unsigned int * localSum, long ** weightVector, int ** diffVector, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters);
 

@@ -6,6 +6,7 @@
         "localdiffrences.h": "c",
         "math.h": "c",
         "localsum.h": "c",
-        "algorithm": "c"
+        "algorithm": "c",
+        "stdio.h": "c"
     }
 }

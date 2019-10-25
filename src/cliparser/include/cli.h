@@ -3,7 +3,6 @@
 struct arguments {
     enum { FULL, REDUCED } mode;
     int precedingBands;
-
     // User parameters
     unsigned char dynamicRange; // D register
     unsigned char registerSize; // R register
@@ -21,6 +20,9 @@ struct arguments {
     // Encoding stuff
     char initialY;
     unsigned int initialK;
+    unsigned int uMax;
+
+    unsigned int wordSize;
 
     int debugMode;
 };
