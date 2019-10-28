@@ -51,21 +51,32 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
 	arguments->mode = REDUCED;
     arguments->dynamicRange = 2;
 	arguments->precedingBands = 0;
-    arguments->weightResolution = 12;
+    arguments->weightResolution = 19;
     arguments->theta = 0;
     arguments->xSize = 4;
     arguments->ySize = 4;
     arguments->zSize = 2;
-    arguments->weightMin = 2;
-    arguments->weightMax = 4;
-    arguments->weightInterval = 256;
+    arguments->weightMin = -6;
+    arguments->weightMax = 3;
+    arguments->weightInterval = 1<<6;
     arguments->debugMode = 0;
-    arguments->uMax = 4;
-    arguments->initialK = 4;
+    arguments->uMax = 16;
+    arguments->initialK = 1<<7;
     arguments->initialY = 4;
     arguments->wordSize = 8;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
     arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
+    arguments->initialK= arguments->dynamicRange-2;
+    if(arguments->yStar > 9) {
+        arguments->yStar = 9;
+    } else {
+        if (4 > arguments->initialY) {
+            arguments-> yStar = 4;
+        } else {
+            arguments->yStar = arguments->initialY + 1;
+        }
+    }
+
 }

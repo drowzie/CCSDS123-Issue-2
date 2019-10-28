@@ -11,14 +11,15 @@ struct arguments {
     // Weight parameters
     unsigned char weightResolution;
     int weightInterval;
-    char weightMin;
-    char weightMax;
+    int weightMin;
+    int weightMax;
     // Image Parameters
     int xSize;
     int ySize;
     int zSize;
     // Encoding stuff
     char initialY;
+    char yStar;
     unsigned int initialK;
     unsigned int uMax;
 

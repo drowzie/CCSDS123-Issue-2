@@ -101,12 +101,12 @@ long quantization(unsigned int * sample, long long predictedSample, int maximumE
 
 long long computePredictedSample(unsigned int * sample, long long * doubleResPredSample, int * localSum, long ** weightVector, int ** diffVector, long long highResPredSample, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters) {
 	if(x > 0 || y > 0) {
-		*doubleResPredSample = highResPredSample >> (parameters->weightResolution+1);
+		(*doubleResPredSample) = highResPredSample >> (parameters->weightResolution+1);
 	} else {
 		if (parameters->precedingBands == 0 || z == 0) {
-			*doubleResPredSample = smid << 1;
+			(*doubleResPredSample) = smid << 1;
 		} else {
-			*doubleResPredSample = sample[offset(x,y,z-1,parameters)] << 1;
+			(*doubleResPredSample) = sample[offset(x,y,z-1,parameters)] << 1;
 		}
 	}
 	return (*doubleResPredSample) >> 1;
@@ -117,8 +117,8 @@ unsigned int sampleRepresentation(unsigned int * sample, long long * clippedBinC
         return sample[offset(x,y,z,parameters)];
     } else {
         long long doubleResSample = 0;
-        *clippedBinCenter = clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), smin, smax);
-        doubleResSample = ( 4 * ((0x1 << parameters->theta) - sampleDamping)) * ((*clippedBinCenter << parameters->weightResolution) - ((sgn(quantizedSample) * maximumError * sampleOffset) << (parameters->weightResolution - parameters->theta)));
+        (*clippedBinCenter) = clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), smin, smax);
+        doubleResSample = ( 4 * ((0x1 << parameters->theta) - sampleDamping)) * (((*clippedBinCenter) << parameters->weightResolution) - ((sgn(quantizedSample) * maximumError * sampleOffset) << (parameters->weightResolution - parameters->theta)));
         doubleResSample += ((sampleDamping * highResPredSample) - (sampleDamping << (parameters->weightResolution + 1)));
         doubleResSample = doubleResSample >> (parameters->weightResolution + parameters->theta + 1);
 		doubleResSample = (doubleResSample + 1) >> 1;

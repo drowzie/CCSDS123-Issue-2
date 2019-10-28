@@ -5,13 +5,14 @@ csrc = $(wildcard src/*.c) \
 	   $(wildcard src/predictor/weights/*.c) \
 	   $(wildcard src/predictor/utils/*.c) \
 	   $(wildcard src/encoder/*.c) \
+	   $(wildcard src/utils/*.c) \
        $(wildcard src/predictor/localdiffrences/*.c)
 
 
 
 obj = $(csrc:.c=.o)
 
-LDFLAGS = -g -Wall -lm -Ofast
+LDFLAGS = -g -Wall -lm
 
 main: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)

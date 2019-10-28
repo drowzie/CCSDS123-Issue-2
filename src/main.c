@@ -8,6 +8,7 @@
 #include "predictor/include/predictor.h"
 #include "predictor/utils/include/utilities.h"
 #include "encoder/include/encoder.h"
+#include "utils/include/utilities.h"
 
 
 void insertTestData(int * sample, struct arguments * args){
@@ -78,13 +79,23 @@ int main(int argc, char **argv)
 	unsigned long * residuals = (long*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 	int * localsum = (int*) calloc(parameters.xSize*parameters.ySize*parameters.zSize, sizeof(int));
 	unsigned int * sampleRep = (int*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
+
+
+	/* 
+		2D Array structured as:
+		I:0 = # Preceding bands
+		IF FULL VECTOR IS USED:
+		I:1 = N Vector
+		I:1 = W Vector
+		I:1 = NW Vector
+	 */
 	long ** weights = (long **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(long *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) {
-         weights[i] = (long *)calloc((i == 4 ? parameters.precedingBands : 1), sizeof(long)); 
+         weights[i] = (long *)calloc((i == 0 ? parameters.precedingBands : 1), sizeof(long));
     }
 	int ** diffVector = (int **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(int *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
-         diffVector[i] = (int *)calloc((i == 4 ? parameters.precedingBands : 1), sizeof(int)); 
+         diffVector[i] = (int *)calloc((i == 0 ? parameters.precedingBands : 1), sizeof(int)); 
 	}
 	/* 
 		ENCODING SPECIFIC MALLOCS
@@ -92,19 +103,25 @@ int main(int argc, char **argv)
     unsigned int * counter = (unsigned int *)malloc(sizeof(unsigned int)*parameters.zSize);
     unsigned int * accumulator = (unsigned int *)malloc(sizeof(unsigned int)*parameters.zSize);
 
-	// TIMING STATISTICS
-	struct timespec start, finish;
-	clock_gettime(CLOCK_REALTIME, &start);
 	
 	FILE * residuals_file = NULL;
-	residuals_file = fopen("Encoded", "w+b");
-
-	insertTestData(sample, &parameters);
-	int numWrittenBits = 0;
+	residuals_file = fopen("Encoded.bin", "w+b");
+	//insertTestData(sample, &parameters);
+	
+	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
-	for (int z = 0; z < parameters.zSize; z++) {
+
+	/* 
+		ACTUAL COMPUTATION/WRITING
+	*/
+	printf("Started reading\n");
+	readIntSamples(&parameters, "" ,sample);
+	printf("inputsample %d\n", sample[0]);
+	printf("inputsample %d\n", sample[1]);
+
+ 	for (int z = 0; z < parameters.zSize; z++) {
 		counter[z] = 0x1 << parameters.initialY;
-		accumulator[z] = (counter[z]*(3*(0x1 << (parameters.initialK + 6))-49))/0x080;
+		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (int y = 0; y < parameters.ySize; y++) {
 			for (int x = 0; x < parameters.xSize; x++) {
 				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
@@ -114,25 +131,18 @@ int main(int argc, char **argv)
 		}
 	}
 	// Fill up the rest to fill up word size
-	int numPaddingbits = parameters.wordSize*8 - ((totalWrittenBytes*8 + numWrittenBits) % parameters.wordSize*8);
+ 	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
 	if(numPaddingbits < parameters.wordSize*8 && numPaddingbits > 0) {
 		writeBits(0, numPaddingbits, &numWrittenBits, &totalWrittenBytes, residuals_file);
-	}
-	fclose(residuals_file);
-	printArrayInt(sample,&parameters);
-	printArrayLong(residuals, &parameters);
+	} 
 
-	// TIMING SPECIFICS
-	clock_gettime(CLOCK_REALTIME, &finish);
-	long seconds = finish.tv_sec - start.tv_sec; 
-    long ns = finish.tv_nsec - start.tv_nsec; 
-	if (start.tv_nsec > finish.tv_nsec) { // clock underflow 
-		--seconds; 
-		ns += 1000000000; 
-    }
-	printf("seconds without ns: %ld\n", seconds); 
-    printf("nanoseconds: %ld\n", ns); 
-    printf("total seconds: %e\n", (double)seconds + (double)ns/(double)1000000000); 
+	/* 
+		END OF COMPUTATION/WRITING
+	*/
+
+	fclose(residuals_file);
+	//printArrayInt(sample,&parameters);
+	//printArrayLong(residuals, &parameters);
 
 	// Free up stuff
 	free(accumulator);
@@ -149,8 +159,8 @@ int main(int argc, char **argv)
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
          free(diffVector[i]);
     }
-	free(weights);
-	free(diffVector);
+ 	free(weights);
+	free(diffVector); 
 
 	return 0;
 }
