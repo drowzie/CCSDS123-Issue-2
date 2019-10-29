@@ -28,4 +28,6 @@ struct arguments {
     int debugMode;
 };
 
+extern struct arguments parameters;
+
 void parseArguments(int argc, char **argv, struct arguments * arguments);

@@ -1,10 +1,6 @@
 #include "include/predictor.h"
-#include "localdiffrences/include/localdiffrences.h"
-#include "utils/include/utilities.h"
-#include "localsum/include/localsum.h"
-#include "weights/include/weights.h"
-
 #include "../cliparser/include/cli.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -18,13 +14,11 @@ int ** diffVector, long ** weights, long sMin, long sMax, long sMid, int maximum
 	if(x == 0 && y == 0) {
 		initWeights(weights, z, parameters);
 	}
-	
 	/* 
 		Calculate local sum and build up the diffrential vector at a given sample.
 	*/
 	wideNeighborLocalSum(sampleRep,localsum,x,y,z,parameters);
 	BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
-
 	/* 
 		Step for calculating prediction sample
 	*/

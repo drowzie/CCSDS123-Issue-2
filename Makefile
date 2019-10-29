@@ -1,12 +1,8 @@
 csrc = $(wildcard src/*.c) \
        $(wildcard src/predictor/*.c) \
 	   $(wildcard src/cliparser/*.c) \
-	   $(wildcard src/predictor/localsum/*.c) \
-	   $(wildcard src/predictor/weights/*.c) \
-	   $(wildcard src/predictor/utils/*.c) \
 	   $(wildcard src/encoder/*.c) \
 	   $(wildcard src/utils/*.c) \
-       $(wildcard src/predictor/localdiffrences/*.c)
 
 
 

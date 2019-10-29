@@ -12,6 +12,7 @@
         "utils.h": "c",
         "encoder.h": "c",
         "string": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "predictor.h": "c"
     }
 }

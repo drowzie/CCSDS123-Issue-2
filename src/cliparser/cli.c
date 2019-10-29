@@ -67,6 +67,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
+    arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
     arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
     arguments->initialK= arguments->dynamicRange-2;
     if(arguments->yStar > 9) {

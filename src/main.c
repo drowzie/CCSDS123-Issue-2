@@ -6,7 +6,6 @@
 
 #include "cliparser/include/cli.h"
 #include "predictor/include/predictor.h"
-#include "predictor/utils/include/utilities.h"
 #include "encoder/include/encoder.h"
 #include "utils/include/utilities.h"
 
@@ -69,8 +68,7 @@ int main(int argc, char **argv)
     long  sMax = (0x1 << parameters.dynamicRange) - 1;
     long  sMid = 0x1 << (parameters.dynamicRange - 1);
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
-
-	// IMAGE
+	// IMAGE	
 	unsigned int * sample = (int*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
 
 	/* 
@@ -91,11 +89,11 @@ int main(int argc, char **argv)
 	 */
 	long ** weights = (long **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(long *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) {
-         weights[i] = (long *)calloc((i == 0 ? parameters.precedingBands : 1), sizeof(long));
+         weights[i] = (long *)calloc((i == CENTRAL ? parameters.precedingBands : 1), sizeof(long));
     }
 	int ** diffVector = (int **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(int *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
-         diffVector[i] = (int *)calloc((i == 0 ? parameters.precedingBands : 1), sizeof(int)); 
+         diffVector[i] = (int *)calloc((i == CENTRAL ? parameters.precedingBands : 1), sizeof(int)); 
 	}
 	/* 
 		ENCODING SPECIFIC MALLOCS
@@ -106,7 +104,7 @@ int main(int argc, char **argv)
 	
 	FILE * residuals_file = NULL;
 	residuals_file = fopen("Encoded.bin", "w+b");
-	//insertTestData(sample, &parameters);
+	insertTestData(sample, &parameters);
 	
 	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
@@ -115,7 +113,7 @@ int main(int argc, char **argv)
 		ACTUAL COMPUTATION/WRITING
 	*/
 	printf("Started reading\n");
-	readIntSamples(&parameters, "" ,sample);
+	//readIntSamples(&parameters, "" ,sample);
 	printf("inputsample %d\n", sample[0]);
 	printf("inputsample %d\n", sample[1]);
 

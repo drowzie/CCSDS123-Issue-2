@@ -1,6 +1,5 @@
-#include "include/weights.h"
-#include "../../cliparser/include/cli.h"
-#include "../utils/include/utilities.h"
+#include "include/predictor.h"
+#include "../cliparser/include/cli.h"
 
 /*
     Initial weights for each Z band.

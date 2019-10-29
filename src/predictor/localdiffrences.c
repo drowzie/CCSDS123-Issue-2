@@ -1,6 +1,5 @@
-#include "include/localdiffrences.h"
-#include "../utils/include/utilities.h"
-#include "../../cliparser/include/cli.h"
+#include "include/predictor.h"
+#include "../cliparser/include/cli.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,12 +10,12 @@
 void BuildDiffVector(int * sample, int * localsum, int ** diffVector, int x, int y, int z, struct arguments * parameters) {
 	int currentPredBands = z < parameters->precedingBands ? z : parameters->precedingBands;
 	for (int i = 0; i < currentPredBands; i++) {
-		diffVector[0][i] = centralLocalDiffrence(sample, localsum, x, y, z-i-1, parameters);
+		diffVector[CENTRAL][i] = centralLocalDiffrence(sample, localsum, x, y, z-i-1, parameters);
 	}
 	if (parameters->mode == FULL) {
-		diffVector[1][0] = northLocalDiffrence(sample, localsum, x, y, z, parameters);
-		diffVector[2][0] = westLocalDiffrence(sample, localsum, x, y, z, parameters);
-		diffVector[3][0] = northwestLocalDiffrence(sample, localsum, x, y, z, parameters);
+		diffVector[NORTH][0] = northLocalDiffrence(sample, localsum, x, y, z, parameters);
+		diffVector[WEST][0] = westLocalDiffrence(sample, localsum, x, y, z, parameters);
+		diffVector[NORTHWEST][0] = northwestLocalDiffrence(sample, localsum, x, y, z, parameters);
 	}
 }
 
