@@ -10,7 +10,7 @@
 #include "utils/include/utilities.h"
 
 
-void insertTestData(int * sample, struct arguments * args){
+void insertTestData(unsigned int * sample, struct arguments * args){
 	sample[offset(0,0,0, args)] = 4;
 	sample[offset(1,0,0, args)] = 4;
 	sample[offset(2,0,0, args)] = 4;
@@ -53,6 +53,25 @@ void insertTestData(int * sample, struct arguments * args){
 	sample[offset(3,3,1, args)] = 5;
 }
 
+void writearary(unsigned int * sample, struct arguments * args) {
+    FILE * file = fopen("test.bin", "w+b");
+
+	for (int z = 0; z < args->zSize; z++)
+	{
+		for (int y = 0; y < args->ySize; y++)
+		{
+			for (int x = 0; x < args->xSize; x++)
+			{
+				fwrite(&sample[offset(x,y,z,args)], 1, 2, file);
+			}
+			
+		}
+		
+	}
+	
+
+	fclose(file);
+}
 
 
 int main(int argc, char **argv)
@@ -74,10 +93,9 @@ int main(int argc, char **argv)
 	/* 
 		PREDICTION SPECIFIC MALLOCS
 	*/
-	unsigned long * residuals = (long*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
+	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 	int * localsum = (int*) calloc(parameters.xSize*parameters.ySize*parameters.zSize, sizeof(int));
-	unsigned int * sampleRep = (int*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
-
+	unsigned int * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
 
 	/* 
 		2D Array structured as:
@@ -87,25 +105,27 @@ int main(int argc, char **argv)
 		I:1 = W Vector
 		I:1 = NW Vector
 	 */
-	long ** weights = (long **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(long *));
+	long ** weights = malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(long *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) {
-         weights[i] = (long *)calloc((i == CENTRAL ? parameters.precedingBands : 1), sizeof(long));
+         weights[i] = calloc((i == 0 ? parameters.precedingBands : 1), sizeof(long));
     }
-	int ** diffVector = (int **) malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(int *));
+	int ** diffVector = malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(int *));
     for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
-         diffVector[i] = (int *)calloc((i == CENTRAL ? parameters.precedingBands : 1), sizeof(int)); 
+         diffVector[i] = calloc((i == 0 ? parameters.precedingBands : 1), sizeof(int)); 
 	}
 	/* 
 		ENCODING SPECIFIC MALLOCS
 	*/
-    unsigned int * counter = (unsigned int *)malloc(sizeof(unsigned int)*parameters.zSize);
-    unsigned int * accumulator = (unsigned int *)malloc(sizeof(unsigned int)*parameters.zSize);
+    unsigned int * counter = malloc(sizeof(unsigned int)*parameters.zSize);
+    unsigned int * accumulator = malloc(sizeof(unsigned int)*parameters.zSize);
 
 	
 	FILE * residuals_file = NULL;
 	residuals_file = fopen("Encoded.bin", "w+b");
-	insertTestData(sample, &parameters);
-	
+	FILE * deltafile = fopen("Encoded.bin.delta", "w+b");
+	//insertTestData(sample, &parameters);
+	//writearary(sample, &parameters);
+
 	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
 
@@ -113,9 +133,8 @@ int main(int argc, char **argv)
 		ACTUAL COMPUTATION/WRITING
 	*/
 	printf("Started reading\n");
-	//readIntSamples(&parameters, "" ,sample);
-	printf("inputsample %d\n", sample[0]);
-	printf("inputsample %d\n", sample[1]);
+	char filename[128] = "test.bin";
+	readIntSamples(&parameters, filename, sample);
 
  	for (int z = 0; z < parameters.zSize; z++) {
 		counter[z] = 0x1 << parameters.initialY;
@@ -124,10 +143,16 @@ int main(int argc, char **argv)
 			for (int x = 0; x < parameters.xSize; x++) {
 				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
 				// Currently only BSQ encoding mode
+				fwrite(&residuals[offset(x,y,z,&parameters)], 1, sizeof(unsigned int), deltafile);
 				encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}
+
+	printArrayInt(sample, &parameters);
+	//printArrayInt(sampleRep, &parameters);
+	printArrayLong(residuals, &parameters);
+
 	// Fill up the rest to fill up word size
  	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
 	if(numPaddingbits < parameters.wordSize*8 && numPaddingbits > 0) {
@@ -139,6 +164,7 @@ int main(int argc, char **argv)
 	*/
 
 	fclose(residuals_file);
+	fclose(deltafile);
 	//printArrayInt(sample,&parameters);
 	//printArrayLong(residuals, &parameters);
 
