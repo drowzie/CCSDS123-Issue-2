@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
 				// Currently only BSQ encoding mode
 				fwrite((&residuals[offset(x,y,z,&parameters)]), 1, sizeof(unsigned int), deltafile);
-				//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}
