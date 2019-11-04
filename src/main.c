@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 		PREDICTION SPECIFIC MALLOCS
 	*/
 	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
-	int * localsum = (int*) calloc(parameters.xSize*parameters.ySize*parameters.zSize, sizeof(int));
+	int * localsum = calloc(parameters.xSize*parameters.ySize*parameters.zSize, sizeof(int));
 	unsigned int * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
 
 	/* 
@@ -143,8 +143,8 @@ int main(int argc, char **argv)
 			for (int x = 0; x < parameters.xSize; x++) {
 				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
 				// Currently only BSQ encoding mode
-				fwrite(&residuals[offset(x,y,z,&parameters)], 1, sizeof(unsigned int), deltafile);
-				encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				fwrite((&residuals[offset(x,y,z,&parameters)]), 1, sizeof(unsigned int), deltafile);
+				//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}

@@ -48,7 +48,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 
 void parseArguments(int argc, char **argv, struct arguments * arguments) {
-	arguments->mode = FULL;
+	arguments->mode = REDUCED;
     arguments->dynamicRange = 16;
 	arguments->precedingBands = 15;
     arguments->weightResolution = 13;

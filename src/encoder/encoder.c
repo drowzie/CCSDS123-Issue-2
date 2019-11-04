@@ -19,7 +19,6 @@ int encodeSampleAdaptive(unsigned long sampleToEncode, unsigned int * counter, u
             writeBits(0, parameters->uMax, numWrittenBits, totalWrittenBytes, fileToWrite);
             writeBits(sampleToEncode, parameters->dynamicRange, numWrittenBits, totalWrittenBytes, fileToWrite);
         }
-
         if(counter[z] < ((0x1 << parameters->yStar) - 1)) {
             accumulator[z] += sampleToEncode;
             counter[z]++;

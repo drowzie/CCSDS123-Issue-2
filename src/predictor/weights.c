@@ -14,6 +14,12 @@ void initWeights(long ** weights, int z, struct arguments * parameters) {
             weights[CENTRAL][i] = weights[CENTRAL][i - 1] >> 3;
         }
     }
+    if(parameters->mode == FULL) {
+        for(int i = 1; i < 4; i++) {
+            weights[i][0] = 0;
+        }
+    }
+    
 }
 
 /* 
@@ -21,7 +27,7 @@ void initWeights(long ** weights, int z, struct arguments * parameters) {
  */
 void updateWeightVector(long ** weights, int ** diffVector, long long error, int x, int y, int z, struct arguments * parameters) {
     
-    int signError = sgnplus(error);
+    int signError = error < 0 ? -1 : 1;
     int scalingExp = parameters->weightMin + (int)((((y*parameters->xSize + x)-parameters->xSize))/parameters->weightInterval);
     scalingExp = clip(scalingExp, parameters->weightMin, parameters->weightMax);
     scalingExp += parameters->dynamicRange - parameters->weightResolution;
@@ -36,7 +42,7 @@ void updateWeightVector(long ** weights, int ** diffVector, long long error, int
                 weights[CENTRAL][i] = weights[CENTRAL][i] + ((((signError * diffVector[CENTRAL][z-i-1]) << (-1*scalingExp)) + 1) >> 1);
             }
             int weightLimit = 1 << (parameters->weightResolution + 2);
-            weights[CENTRAL][i] = clip(weights[0][i], (-1 * weightLimit), (weightLimit -1));
+            weights[CENTRAL][i] = clip(weights[CENTRAL][i], (-1 * weightLimit), (weightLimit -1));
         }
     }
 
