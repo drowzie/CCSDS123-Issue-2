@@ -94,25 +94,11 @@ int main(int argc, char **argv)
 		PREDICTION SPECIFIC MALLOCS
 	*/
 	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
-	int * localsum = calloc(parameters.xSize*parameters.ySize*parameters.zSize, sizeof(int));
+	int * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(int));
 	unsigned int * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
 
-	/* 
-		2D Array structured as:
-		I:0 = # Preceding bands
-		IF FULL VECTOR IS USED:
-		I:1 = N Vector
-		I:1 = W Vector
-		I:1 = NW Vector
-	 */
-	long ** weights = malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(long *));
-    for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) {
-         weights[i] = calloc((i == 0 ? parameters.precedingBands : 1), sizeof(long));
-    }
-	int ** diffVector = malloc((parameters.mode != REDUCED ? 4 : 1) * sizeof(int *));
-    for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
-         diffVector[i] = calloc((i == 0 ? parameters.precedingBands : 1), sizeof(int)); 
-	}
+	long * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
+	long * diffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
 	/* 
 		ENCODING SPECIFIC MALLOCS
 	*/
@@ -122,7 +108,7 @@ int main(int argc, char **argv)
 	
 	FILE * residuals_file = NULL;
 	residuals_file = fopen("Encoded.bin", "w+b");
-	FILE * deltafile = fopen("Encoded.bin.delta", "w+b");
+	FILE * deltafile = fopen("Encoded.bin.delta", "wb");
 	//insertTestData(sample, &parameters);
 	//writearary(sample, &parameters);
 
@@ -133,25 +119,26 @@ int main(int argc, char **argv)
 		ACTUAL COMPUTATION/WRITING
 	*/
 	printf("Started reading\n");
-	char filename[128] = "test.bin";
+	char filename[128] = "HICO_L2_1.BSQ";
 	readIntSamples(&parameters, filename, sample);
 
  	for (int z = 0; z < parameters.zSize; z++) {
-		counter[z] = 0x1 << parameters.initialY;
+		counter[z] = 1 << parameters.initialY;
 		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (int y = 0; y < parameters.ySize; y++) {
 			for (int x = 0; x < parameters.xSize; x++) {
 				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
 				// Currently only BSQ encoding mode
-				fwrite((&residuals[offset(x,y,z,&parameters)]), 1, sizeof(unsigned int), deltafile);
+				unsigned int tempResidual = (unsigned int)residuals[offset(x,y,z,&parameters)];
+				fwrite((&tempResidual), 1, sizeof(unsigned int), deltafile);
 				encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}
 
-	printArrayInt(sample, &parameters);
+	//printArrayInt(sample, &parameters);
 	//printArrayInt(sampleRep, &parameters);
-	printArrayLong(residuals, &parameters);
+	//printArrayLong(residuals, &parameters);
 
 	// Fill up the rest to fill up word size
  	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
@@ -175,14 +162,6 @@ int main(int argc, char **argv)
 	free(sample);
 	free(residuals);
 	free(localsum);
-
-    for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) {
-         free(weights[i]);
-    }
-
-    for (int i=0; i<(parameters.mode != REDUCED ? 4 : 1); i++) { 
-         free(diffVector[i]);
-    }
  	free(weights);
 	free(diffVector); 
 

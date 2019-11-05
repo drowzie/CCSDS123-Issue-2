@@ -37,16 +37,16 @@ void printArrayInt(unsigned int * sample, struct arguments * args) {
 	}
 }
 
-void printVectors(int ** vector, struct arguments * parameters) {
+void printVectors(long * vector, struct arguments * parameters) {
 	if(parameters->mode == FULL) {
-		printf("N DIFFRENCE: %d \n", vector[1][0]);
-		printf("W DIFFRENCE: %d \n", vector[2][0]);
-		printf("NW DIFFRENCE: %d \n", vector[3][0]);
+		printf("N DIFFRENCE: %ld \n", vector[parameters->precedingBands]);
+		printf("W DIFFRENCE: %ld \n", vector[parameters->precedingBands+1]);
+		printf("NW DIFFRENCE: %ld \n", vector[parameters->precedingBands+2]);
 	}
 	printf("Central Diffrences: ");
 	for (int i = 0; i < parameters->precedingBands; i++)
 	{
-		printf("%d ", vector[0][i]);
+		printf("%ld ", vector[i]);
 	}
 	printf("\n");
 	

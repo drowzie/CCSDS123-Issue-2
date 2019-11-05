@@ -7,16 +7,17 @@
     Calloc defaults 0 for directional
 */
 
-void initWeights(long ** weights, int z, struct arguments * parameters) {
+void initWeights(long * weights, int z, struct arguments * parameters) {
     if(parameters->precedingBands > 0){
-        weights[CENTRAL][0] = 7 << (parameters->weightResolution - 3);
-        for(int i = 1; i < parameters->precedingBands; i++){
-            weights[CENTRAL][i] = weights[CENTRAL][i - 1] >> 3;
+        weights[0] = 7 << (parameters->weightResolution - 3);
+        int currentPredictionBand = z < parameters->precedingBands ? z : parameters->precedingBands;
+        for(int i = 1; i < currentPredictionBand; i++){
+            weights[i] = weights[i - 1] >> 3;
         }
     }
     if(parameters->mode == FULL) {
-        for(int i = 1; i < 4; i++) {
-            weights[i][0] = 0;
+        for(int i = 0; i < 3; i++) {
+            weights[parameters->precedingBands + i] = 0;
         }
     }
     
@@ -25,36 +26,37 @@ void initWeights(long ** weights, int z, struct arguments * parameters) {
 /* 
     Update_weights will update weights according to chapter 4.10 in Issue 2
  */
-void updateWeightVector(long ** weights, int ** diffVector, long long error, int x, int y, int z, struct arguments * parameters) {
+void updateWeightVector(long * weights, long * diffVector, long long error, int x, int y, int z, struct arguments * parameters) {
     
+    long weightLimit = 0x1 << (parameters->weightResolution + 2);
     int signError = error < 0 ? -1 : 1;
-    int scalingExp = parameters->weightMin + (int)((((y*parameters->xSize + x)-parameters->xSize))/parameters->weightInterval);
-    scalingExp = clip(scalingExp, parameters->weightMin, parameters->weightMax);
+
+    long scalingExp = ((y-1*parameters->xSize)+x) >> parameters->weightInterval;
+    scalingExp = clip(parameters->weightMin + scalingExp, parameters->weightMin, parameters->weightMax);
     scalingExp += parameters->dynamicRange - parameters->weightResolution;
     //TODO: Add sigma for scaling exp: Note 2 diffrent sigma for directional and central diffrences
-    
     if(z > 0) {
-        int currentPredBands = z < parameters->precedingBands ? z : parameters->precedingBands;
-        for(int i = 0; i < currentPredBands; i++) { 
+        int currentPredictionBand = z < parameters->precedingBands ? z : parameters->precedingBands;
+        for(int i = 0; i < currentPredictionBand; i++) { 
             if(scalingExp > 0) {
-                weights[CENTRAL][i] = weights[CENTRAL][i] + ((((signError * diffVector[CENTRAL][z-i-1]) >> scalingExp) + 1) >> 1);
+                weights[i] += (signError * diffVector[i]) >> scalingExp;
             } else {
-                weights[CENTRAL][i] = weights[CENTRAL][i] + ((((signError * diffVector[CENTRAL][z-i-1]) << (-1*scalingExp)) + 1) >> 1);
+                weights[i] += (signError * diffVector[i]) << (-1*scalingExp);
             }
-            int weightLimit = 1 << (parameters->weightResolution + 2);
-            weights[CENTRAL][i] = clip(weights[CENTRAL][i], (-1 * weightLimit), (weightLimit -1));
+            weights[i] = (weights[i] + 1) >> 1;
+            weights[i] = clip(weights[i], (-1 * weightLimit), (weightLimit - 1));
         }
     }
 
-    if(parameters->mode == FULL) {
-        for (int i = 1; i < 4; i++) {
+/*     if(parameters->mode == FULL) {
+        for (int i = 0; i < 3; i++) {
             if(scalingExp > 0) {
-                weights[i][0] = weights[i][0] + ((((signError * diffVector[i][0]) >> scalingExp) + 1) >> 1);
+                weights[parameters->precedingBands + i] += (signError * diffVector[parameters->precedingBands + i]) >> scalingExp;
             } else {
-                weights[i][0] = weights[i][0] + ((((signError * diffVector[i][0]) << (-1*scalingExp)) + 1) >> 1);
+                weights[parameters->precedingBands + i] += (signError * diffVector[parameters->precedingBands + i]) << (-1*scalingExp);
             }
-            int weightLimit = 0x1 << (parameters->weightResolution + 2);
-            weights[i][0] = clip(weights[i][0], (-1 * weightLimit), (weightLimit -1));
+            weights[parameters->precedingBands + i] = (weights[parameters->precedingBands + i] + 1) >> 1;
+            weights[parameters->precedingBands + i] = clip(weights[parameters->precedingBands + i], (-1 * weightLimit), (weightLimit-1));
         }
-    }
+    } */
 }

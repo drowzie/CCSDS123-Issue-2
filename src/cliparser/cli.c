@@ -35,7 +35,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 777: arguments->debugMode = 1; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
-	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 16 ? 16 : atoi(arg)  ; break;
+	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 15 ? 15 : atoi(arg)  ; break;
     case 'x': arguments->xSize = atoi(arg); break;
     case 'y': arguments->ySize = atoi(arg); break;
     case 'z': arguments->zSize = atoi(arg); break;
@@ -58,16 +58,16 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->zSize = 2;
     arguments->weightMin = -1;
     arguments->weightMax = 3;
-    arguments->weightInterval = 1<<6;
+    arguments->weightInterval = 6;
     arguments->debugMode = 0;
     arguments->uMax = 16;
-    arguments->initialK = 5;
-    arguments->initialY = 1;
+    arguments->initialK = 1;
+    arguments->initialY = 6;
     arguments->wordSize = 4;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
-    arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
+    //arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
     arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
     if(arguments->yStar > 9) {
         arguments->yStar = 9;
@@ -78,4 +78,5 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
             arguments->yStar = arguments->initialY + 1;
         }
     }
+    arguments->yStar=5;
 }
