@@ -7,10 +7,10 @@ int encodeSampleAdaptive(unsigned long sampleToEncode, unsigned int * counter, u
     if(y == 0 && x == 0) {
         writeBits(sampleToEncode, parameters->dynamicRange, numWrittenBits, totalWrittenBytes, fileToWrite);
     } else {
-        unsigned long kValue = (int) log2((accumulator[z] + ((49*counter[z]) >> 7)) / counter[z]);
+        long kValue = log2((accumulator[z] + ((49*counter[z]) >> 7)) / counter[z]);
         kValue = kValue < 0 ? 0 : kValue;
         kValue = kValue > (parameters->dynamicRange - 2) ? parameters->dynamicRange - 2 : kValue;
-        unsigned int uValue = sampleToEncode >> kValue;
+        long uValue = sampleToEncode >> kValue;
         if(uValue < parameters->uMax) {
             writeBits(0, uValue, numWrittenBits, totalWrittenBytes, fileToWrite);
             writeBits(1, 1, numWrittenBits,totalWrittenBytes, fileToWrite);
@@ -20,12 +20,14 @@ int encodeSampleAdaptive(unsigned long sampleToEncode, unsigned int * counter, u
             writeBits(sampleToEncode, parameters->dynamicRange, numWrittenBits, totalWrittenBytes, fileToWrite);
         }
 
-        if(counter[z] < ((1 << parameters->yStar) - 1)) {
-            accumulator[z] += sampleToEncode;
-            counter[z]++;
-        } else{
-            accumulator[z] = (accumulator[z] + sampleToEncode + 1) >> 1;
-            counter[z] = (counter[z] + 1) >> 1;
+        if(x+y != 0) {
+            if(counter[z] < ((1 << parameters->yStar) - 1)) {
+                accumulator[z] += sampleToEncode;
+                counter[z]++;
+            } else{
+                accumulator[z] = (accumulator[z] + sampleToEncode + 1) >> 1;
+                counter[z] = (counter[z] + 1) >> 1;
+            }
         }
     }
 

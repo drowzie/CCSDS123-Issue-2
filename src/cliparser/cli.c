@@ -61,8 +61,8 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->weightInterval = 6;
     arguments->debugMode = 0;
     arguments->uMax = 16;
-    arguments->initialK = 1;
-    arguments->initialY = 6;
+    arguments->initialK = 5;
+    arguments->initialY = 1;
     arguments->wordSize = 4;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
@@ -78,5 +78,5 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
             arguments->yStar = arguments->initialY + 1;
         }
     }
-    arguments->yStar=5;
+    arguments->yStar=6;
 }

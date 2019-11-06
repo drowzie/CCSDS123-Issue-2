@@ -79,23 +79,24 @@ int main(int argc, char **argv)
 	/*
 		Parse arguments. --h to see what available arguments(declared in cli.c)
 	*/
-
 	struct arguments parameters;
 	parseArguments(argc, argv, &parameters);
+
+	/* 
+		LOSSLESS Compression: 
+	 */
 
 	long  sMin = 0;
     long  sMax = (0x1 << parameters.dynamicRange) - 1;
     long  sMid = 0x1 << (parameters.dynamicRange - 1);
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
 	// IMAGE	
-	unsigned int * sample = (int*) malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
-
+	unsigned long * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 	/* 
 		PREDICTION SPECIFIC MALLOCS
 	*/
-	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
-	int * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(int));
-	unsigned int * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned int));
+	long * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(long));
+	unsigned long * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 
 	long * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
 	long * diffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
@@ -127,18 +128,13 @@ int main(int argc, char **argv)
 		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (int y = 0; y < parameters.ySize; y++) {
 			for (int x = 0; x < parameters.xSize; x++) {
-				predict(sample, residuals, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0);
+				unsigned long tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
-				unsigned int tempResidual = (unsigned int)residuals[offset(x,y,z,&parameters)];
 				fwrite((&tempResidual), 1, sizeof(unsigned int), deltafile);
-				encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}
-
-	//printArrayInt(sample, &parameters);
-	//printArrayInt(sampleRep, &parameters);
-	//printArrayLong(residuals, &parameters);
 
 	// Fill up the rest to fill up word size
  	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
@@ -152,15 +148,12 @@ int main(int argc, char **argv)
 
 	fclose(residuals_file);
 	fclose(deltafile);
-	//printArrayInt(sample,&parameters);
-	//printArrayLong(residuals, &parameters);
 
 	// Free up stuff
 	free(accumulator);
 	free(counter);
 	free(sampleRep);
 	free(sample);
-	free(residuals);
 	free(localsum);
  	free(weights);
 	free(diffVector); 

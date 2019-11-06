@@ -6,19 +6,21 @@
 #include <math.h>
 
 
-void predict(unsigned int * inputSample, unsigned long * residuals, int x, int y, int z, struct arguments * parameters, unsigned int * sampleRep, int * localsum, 
-long * diffVector, long * weights, long sMin, long sMax, long sMid, int maximumError, int sampleDamping, int sampleOffset) {
+unsigned long predict(unsigned long * inputSample, int x, int y, int z, struct arguments * parameters, unsigned long * sampleRep, long * localsum, 
+long * diffVector, long * weights, long sMin, long sMax, long sMid, int maximumError, int sampleDamping, int sampleOffset, int interbandOffset, int intrabandExponent) {
 	/* 
 		Calculate local sum and build up the diffrential vector at a given sample.
 	*/
-	wideNeighborLocalSum(inputSample,localsum,x,y,z,parameters);
-	BuildDiffVector(inputSample,localsum,diffVector,x,y,z,parameters);
-
+	long long highResSample = 0;
+	if(x+y != 0) {
+		wideNeighborLocalSum(inputSample,localsum,x,y,z,parameters);
+		BuildDiffVector(inputSample,localsum,diffVector,x,y,z,parameters);
+		highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
+	}
 	/* 
-		Step for calculating prediction sample
+		Step for calculating prediction sample and doubleResPredSample
 	*/
-	long long highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
-	long long doubleResPredSample = 0;
+	long long doubleResPredSample = 0; // Calculated inside function computePredictedSample
 	long long predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, highResSample, sMid, sMin, sMax, x, y, z, parameters);
 	/* 
 		Quantization/Sample "compression" part
@@ -26,16 +28,13 @@ long * diffVector, long * weights, long sMin, long sMax, long sMid, int maximumE
 	long quantizerIndex = quantization(inputSample, predictedSample, maximumError, x, y, z, parameters);
 	long clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, sMin, sMax);
 	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, sampleDamping, sampleOffset, x, y, z, parameters);
-	if(x == 0 && y == 0) {
+	if(x+y == 0) {
 		initWeights(weights, z, parameters);
 	} else {
 		long long doubleResError = (clippedBin << 1) - doubleResPredSample;
-		updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
+		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
-	residuals[offset(x,y,z,parameters)] = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maximumError, x, y, z, parameters);
-	/* 
-		Update Weights and mapping
-	*/
+	unsigned long residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maximumError, x, y, z, parameters);
 
 	if(parameters->debugMode != 0) {
 		printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
@@ -44,11 +43,12 @@ long * diffVector, long * weights, long sMin, long sMax, long sMid, int maximumE
 		printf("High resolution Sample is %lld \n", highResSample);
 		printf("predicted value is %lld \n", predictedSample);
 		printf("quantizer to sample is %ld \n", quantizerIndex);
-		printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
-		printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
-		printf("Mapped residual: %lu \n", residuals[offset(x,y,z,parameters)]);
+		printf("input sample is %lu \n", inputSample[offset(x,y,z, parameters)]);
+		printf("sample rep is %lu \n", sampleRep[offset(x,y,z, parameters)]);
+		printf("Mapped residual: %lu \n", residual);
 		printf("---------------------------\n");
 	}
+	return residual;
 }
 
 
@@ -79,7 +79,7 @@ long computeMappedQuantizerIndex(long quantizerIndex, long long predictedSample,
 }
 
 
-long quantization(unsigned int * sample, long long predictedSample, int maximumError, int x, int y, int z, struct arguments * parameters) {
+long quantization(unsigned long * sample, long long predictedSample, int maximumError, int x, int y, int z, struct arguments * parameters) {
 	long long predictionResidual = sample[offset(x,y,z,parameters)] - predictedSample;
 	long long returnValue = 0;
 	if (x == 0 && y == 0) {
@@ -89,7 +89,7 @@ long quantization(unsigned int * sample, long long predictedSample, int maximumE
 	}
 }
 
-long long computePredictedSample(unsigned int * sample, long long * doubleResPredSample, int * localSum, long long highResPredSample, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters) {
+long long computePredictedSample(unsigned long * sample, long long * doubleResPredSample, long * localsum, long long highResPredSample, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters) {
 	if(x+y == 0) {
 		if(z == 0 || parameters->precedingBands == 0) {
 			(*doubleResPredSample) = smid << 1;
@@ -106,7 +106,7 @@ long clippedBinCenter(long predictedSample, long quantizedSample, int maximumErr
 	return clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), sMin, sMax);
 }
 
-unsigned int sampleRepresentation(unsigned int * sample, long clippedBinCenter, long predictedSample, long quantizedSample, int maximumError, long long highResPredSample, int sampleDamping, int sampleOffset, int x, int y, int z, struct arguments * parameters) {
+unsigned int sampleRepresentation(unsigned long * sample, long clippedBinCenter, long predictedSample, long quantizedSample, int maximumError, long long highResPredSample, int sampleDamping, int sampleOffset, int x, int y, int z, struct arguments * parameters) {
     if( x == 0 && y == 0) {
         return sample[offset(x,y,z,parameters)];
     } else {
@@ -119,12 +119,12 @@ unsigned int sampleRepresentation(unsigned int * sample, long clippedBinCenter, 
     }
 }
 
-long long computeHighResPredSample(int * localSum, long * weightVector, long * diffVector, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters) {
+long long computeHighResPredSample(long * localsum, long * weightVector, long * diffVector, long smid, long smin, long smax, int x, int y, int z, struct arguments * parameters) {
 	long diffPredicted = 0;
 	long long predictedSample = 0;
 	diffPredicted = innerProduct(weightVector, diffVector, z, parameters);
 	///////
-	long tmpValue = localSum[offset(x,y,z, parameters)] - (smid << 2);
+	long tmpValue = localsum[offset(x,y,z, parameters)] - (smid << 2);
 	int sgn = tmpValue < 0;
 	tmpValue = abs(tmpValue) << parameters->weightResolution;
 	tmpValue = sgn ? -1 * tmpValue : tmpValue;
@@ -140,11 +140,9 @@ long long computeHighResPredSample(int * localSum, long * weightVector, long * d
 
 long innerProduct(long * weightVector, long * diffVector, int z, struct arguments * parameters) {
 	long diffPredicted = 0;
-	if (z > 0) {
-		int currentPredictionBand = z < parameters->precedingBands ? z : parameters->precedingBands;
-		for(int i = 0; i < currentPredictionBand; i++) {
-			diffPredicted += diffVector[i] * weightVector[i];
-		}
+	int currentPredictionBand = z < parameters->precedingBands ? z : parameters->precedingBands;
+	for(int i = 0; i < currentPredictionBand; i++) {
+		diffPredicted += diffVector[i] * weightVector[i];
 	}
 	if(parameters->mode == FULL) {
 		for (int i = 0; i < 3; i++)

@@ -6,7 +6,7 @@
 /* 
     Read Integer samples into memory
  */
-int readIntSamples(struct arguments * parameters, char fileName[128], unsigned int * samples) {
+int readIntSamples(struct arguments * parameters, char fileName[128], unsigned long * samples) {
     int buffer = 0;
     FILE * sampleFile = fopen("HICO_L2_1.BSQ", "r+b");
     int readbytes = 0;
@@ -16,4 +16,5 @@ int readIntSamples(struct arguments * parameters, char fileName[128], unsigned i
         readbytes++;
     }    
     fclose(sampleFile);
+    return 0;
 }
