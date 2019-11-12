@@ -11,6 +11,7 @@ static char args_doc[] = "";
 
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, OPTION_ARG_OPTIONAL, "Calculate in Full Prediction Mode (DEFAULT=REDUCED)"},
+    { "debug", 777, 0, 0, "DEBUG MODE"},
     { "Dynamic Range", 'd', "DYNRANGE", 0, "Register D size, #2-16"},
     { "Register size", 'r', "REGSIZE", 0, "Register R size, max{32, D +  Ω +  2} ≤ R ≤ 64"},
     { "Sample resolution", 's', "SRES", 0, "Sample Resolution(Θ), #0-4"},
@@ -18,7 +19,7 @@ static struct argp_option options[] = {
     { "Weight resolution", 'w', "WRES", 0, "Weight Resolution(Omega), #4-19"},
     { "Weight interval", 't', "Winterval", 0, "Chapter 4.8.2, CCSDS Issue 2"},
     { "Vmin", 'v', "vMin", 0, "Chapter 4.8.2, CCSDS Issue 2"},
-    { "Vmax", 'm', "vMax", 0, "Chapter 4.8.2, CCSDS Issue 2"},
+    { "Vmax", 'V', "vMax", 0, "Chapter 4.8.2, CCSDS Issue 2"},
     { "xSize", 'x', "xSIZE", 0, "x size of image"},
     { "ySize", 'y', "ySIZE", 0, "y size of image"},
     { "zSize", 'z', "zSIZE", 0, "z size of image"},
@@ -31,9 +32,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct arguments *arguments = state->input;
     switch (key) {
     case 'd': arguments->dynamicRange = atoi(arg); break;
+    case 777: arguments->debugMode = 1; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
-	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 16 ? 16 : atoi(arg)  ; break;
+	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 15 ? 15 : atoi(arg)  ; break;
     case 'x': arguments->xSize = atoi(arg); break;
     case 'y': arguments->ySize = atoi(arg); break;
     case 'z': arguments->zSize = atoi(arg); break;
@@ -47,16 +49,34 @@ static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 
 void parseArguments(int argc, char **argv, struct arguments * arguments) {
 	arguments->mode = REDUCED;
-    arguments->dynamicRange = 2;
-	arguments->precedingBands = 0;
-    arguments->weightResolution = 2;
+    arguments->dynamicRange = 16;
+	arguments->precedingBands = 15;
+    arguments->weightResolution = 13;
     arguments->theta = 0;
-    arguments->xSize = 3;
-    arguments->ySize = 3;
+    arguments->xSize = 4;
+    arguments->ySize = 4;
     arguments->zSize = 2;
-    arguments->weightMin = 2;
-    arguments->weightMax = 4;
-    arguments->weightInterval = 10000;
+    arguments->weightMin = -1;
+    arguments->weightMax = 3;
+    arguments->weightInterval = 6;
+    arguments->debugMode = 0;
+    arguments->uMax = 16;
+    arguments->initialK = 5;
+    arguments->initialY = 1;
+    arguments->wordSize = 4;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
-    arguments->registerSize = 32 > arguments->dynamicRange ? 32 : arguments->dynamicRange;
+    // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
+    arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
+    //arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
+    arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
+    if(arguments->yStar > 9) {
+        arguments->yStar = 9;
+    } else {
+        if (4 > arguments->initialY) {
+            arguments-> yStar = 4;
+        } else {
+            arguments->yStar = arguments->initialY + 1;
+        }
+    }
+    arguments->yStar=6;
 }
