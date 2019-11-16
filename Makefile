@@ -10,14 +10,9 @@ obj = $(csrc:.c=.o)
 
 LDFLAGS = -g -Wall -lm
 
-main: $(obj)
+main.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
 clean:
 	rm -f $(obj) myprog
-
-
-
-
-
