@@ -34,14 +34,14 @@ void printVectors(long * vector, struct arguments * parameters) {
 		printf("%ld ", vector[i]);
 	}
 	printf("\n");
-	
+
 }
 
-int offset(int x, int y, int z, struct arguments * args) { 
-    return (z * args->xSize * args->ySize) + (y * args->xSize) + x; 
+int offset(int x, int y, int z, struct arguments * args) {
+    return (z * args->xSize * args->ySize) + (y * args->xSize) + x;
 }
 
-int sgn(long long x) { 
+int sgn(long long x) {
     if (x > 0) {
         return 1;
     } else if(x < 0) {
