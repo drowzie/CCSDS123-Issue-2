@@ -1,10 +1,9 @@
 import tabula
 import csv
-#df = tabula.read_pdf("a.pdf", pages='78', output_format="json")
 
-tabula.convert_into("a.pdf", "test.csv", output_format="csv", pages='78')
+tabula.convert_into("a.pdf", "test.csv", output_format="csv", pages='90')
 
-table = "0"
+table = "10"
 
 
 with open('test.csv', mode='r') as csv_file:
@@ -19,15 +18,16 @@ with open('test.csv', mode='r') as csv_file:
     outputCodes2 = []
 
     for enum, row in enumerate(csv_reader):
-        if(row[0] == "Active Prefix"):
-            break
+        #if(row[0] == "Active Prefix"):
+        #    break
         if(line_count > 1):
+            print(row)
             inputCodes0.append(row[0])
             inputCodes1.append(row[2])
-            inputCodes2.append(row[4])
+            #inputCodes2.append(row[4])
             outputCodes0.append(row[1])
             outputCodes1.append(row[3])
-            outputCodes2.append(row[5])
+            #outputCodes2.append(row[5])
             line_count+=1
         else:
             line_count+=1
@@ -46,16 +46,49 @@ def fullNumberFromString(txt):
 
 # Check for r in text
 def extractRFromString(txt):
-    txt = "0^{r}, 0≤r≤20"
     x = txt.replace("}", "")
     x = x.split(",")
     number = x[0].split("^{")
     minMax = x[1].split("≤r≤")
     return number[0], minMax
 
-file = open("codeTable.c", "w+")
+
+#Returns bitsize and hexvalue
+def extractOutputCode(outputTxt):
+    print(outputTxt)
+    if("'" in outputTxt):
+        txt = outputTxt.split("'h")
+    else: 
+        txt = outputTxt.split("’h")
+    return txt[0], txt[1]
+
+
+file = open("codeTable"+table+".c", "w+")
 file.write("char codeTable" + table +"[][128] = {\r\n")
 for i in inputList:
+    if("r" in i):
+        
+    elif("^" in i):
+        i = fullNumberFromString(i)
     file.write('"'+i+'"'+",")
-file.write("\r\n}")
+file.write("\r\n};")
+
+bitsizes = []
+outPutValues = []
+for i in outputList:
+    if(not("'" in i or "’" in i)):
+        continue
+    bitsize, outputvalue = extractOutputCode(i)
+    bitsizes.append(bitsize)
+    outPutValues.append(outputvalue)
+file.write("uint32_t outPutCodes" + table +"[] = {\r\n")
+for i in outPutValues:
+    file.write('0x'+i+",")
+file.write("\r\n};")
+file.write("uint8_t bitSizes" + table +"[] = {\r\n")
+for i in bitsizes:
+    file.write(i+", ")
+file.write("\r\n};")
+
+
 file.close()
