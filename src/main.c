@@ -8,52 +8,53 @@
 #include "predictor/include/predictor.h"
 #include "encoder/include/encoder.h"
 #include "utils/include/utilities.h"
+#include <sys/time.h>
 
 
-void insertTestData(unsigned int * sample, struct arguments * args){
-	sample[offset(0,0,0, args)] = 4;
-	sample[offset(1,0,0, args)] = 4;
-	sample[offset(2,0,0, args)] = 4;
-	sample[offset(3,0,0, args)] = 9;
+void insertTestData(unsigned long * sample, struct arguments * args){
+	sample[offset(0,0,0, args)] = 255;
+	sample[offset(1,0,0, args)] = 256;
+	sample[offset(2,0,0, args)] = 257;
+	sample[offset(3,0,0, args)] = 258;
 
-	sample[offset(0,1,0, args)] = 3;
-	sample[offset(1,1,0, args)] = 4;
-	sample[offset(2,1,0, args)] = 5;
-	sample[offset(3,1,0, args)] = 5;
+	sample[offset(0,1,0, args)] = 254;
+	sample[offset(1,1,0, args)] = 253;
+	sample[offset(2,1,0, args)] = 256;
+	sample[offset(3,1,0, args)] = 257;
 
-	sample[offset(0,2,0, args)] = 6;
-	sample[offset(1,2,0, args)] = 7;
-	sample[offset(2,2,0, args)] = 7;
-	sample[offset(3,2,0, args)] = 8;
+	sample[offset(0,2,0, args)] = 258;
+	sample[offset(1,2,0, args)] = 259;
+	sample[offset(2,2,0, args)] = 253;
+	sample[offset(3,2,0, args)] = 255;
  
-	sample[offset(0,3,0, args)] = 6;
-	sample[offset(1,3,0, args)] = 7;
-	sample[offset(2,3,0, args)] = 7;
-	sample[offset(3,3,0, args)] = 7;
+	sample[offset(0,3,0, args)] = 256;
+	sample[offset(1,3,0, args)] = 257;
+	sample[offset(2,3,0, args)] = 258;
+	sample[offset(3,3,0, args)] = 259;
 
 	//
-	sample[offset(0,0,1, args)] = 3;
-	sample[offset(1,0,1, args)] = 4;
-	sample[offset(2,0,1, args)] = 5;
-	sample[offset(3,0,1, args)] = 5;
+	sample[offset(0,0,1, args)] = 253;
+	sample[offset(1,0,1, args)] = 254;
+	sample[offset(2,0,1, args)] = 256;
+	sample[offset(3,0,1, args)] = 257;
 
-	sample[offset(0,1,1, args)] = 6;
-	sample[offset(1,1,1, args)] = 2;
-	sample[offset(2,1,1, args)] = 1;
-	sample[offset(3,1,1, args)] = 1;
+	sample[offset(0,1,1, args)] = 258;
+	sample[offset(1,1,1, args)] = 259;
+	sample[offset(2,1,1, args)] = 253;
+	sample[offset(3,1,1, args)] = 258;
 
-	sample[offset(0,2,1, args)] = 3;
-	sample[offset(1,2,1, args)] = 4;
-	sample[offset(2,2,1, args)] = 5;
-	sample[offset(3,2,1, args)] = 5;
+	sample[offset(0,2,1, args)] = 256;
+	sample[offset(1,2,1, args)] = 253;
+	sample[offset(2,2,1, args)] = 252;
+	sample[offset(3,2,1, args)] = 251;
 
-	sample[offset(0,3,1, args)] = 3;
-	sample[offset(1,3,1, args)] = 4;
-	sample[offset(2,3,1, args)] = 5;
-	sample[offset(3,3,1, args)] = 5;
+	sample[offset(0,3,1, args)] = 253;
+	sample[offset(1,3,1, args)] = 254;
+	sample[offset(2,3,1, args)] = 256;
+	sample[offset(3,3,1, args)] = 257;
 }
 
-void writearary(unsigned int * sample, struct arguments * args) {
+void writearary(unsigned long * sample, struct arguments * args) {
     FILE * file = fopen("test.bin", "w+b");
 
 	for (int z = 0; z < args->zSize; z++)
@@ -68,14 +69,16 @@ void writearary(unsigned int * sample, struct arguments * args) {
 		}
 		
 	}
-	
 
 	fclose(file);
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
+	double start;
+	double computeTime=0;
+	double readTime=0;
+  	double writeTime=0;
 	/*
 		Parse arguments. --h to see what available arguments(declared in cli.c)
 	*/
@@ -92,6 +95,7 @@ int main(int argc, char **argv)
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
 	// IMAGE	
 	unsigned long * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
+	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 	/* 
 		PREDICTION SPECIFIC MALLOCS
 	*/
@@ -119,10 +123,12 @@ int main(int argc, char **argv)
 	/* 
 		ACTUAL COMPUTATION/WRITING
 	*/
+	//printf("Det funker ikke\n");
 	printf("Started reading\n");
 	char filename[128] = "HICO_L2_1.BSQ";
 	readIntSamples(&parameters, filename, sample);
 
+	start = walltime();
  	for (int z = 0; z < parameters.zSize; z++) {
 		counter[z] = 1 << parameters.initialY;
 		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
@@ -130,11 +136,18 @@ int main(int argc, char **argv)
 			for (int x = 0; x < parameters.xSize; x++) {
 				unsigned long tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
-				fwrite((&tempResidual), 1, sizeof(unsigned int), deltafile);
+				residuals[offset(x,y,z,&parameters)] = tempResidual;
+				fwrite((&tempResidual), 1, 2, deltafile);
 				encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
 	}
+	computeTime += walltime() - start;
+
+	printf("\n");
+	printf("Compute time:          %7.3f ms\n",computeTime*1e3);
+
+	
 
 	// Fill up the rest to fill up word size
  	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));

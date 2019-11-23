@@ -51,8 +51,6 @@ void narrowColumnLocalSum(unsigned long * sample, long * localsum, int smid, int
 int offset(int x, int y, int z, struct arguments * args);
 long long clip(long long x, long long xmin, long long xmax);
 long long modR(long long x, long long R);
-void printArrayLong(unsigned long * sample, struct arguments * args);
-void printArrayInt(unsigned long * sample, struct arguments * args);
 void printVectors(long * vector, struct arguments * parameters);
 int offset(int x, int y, int z, struct arguments * args);
 int sgn(long long x);

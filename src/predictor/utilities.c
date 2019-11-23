@@ -7,21 +7,6 @@ long long modR(long long x, long long R){
     return ((x + power2) - (((((x + power2) >> (R - 1) >> 1)) << (R - 1)) << 1)) - power2;
 }
 
-void printArrayLong(unsigned long * sample, struct arguments * args) {
-	for (int z = 0; z < args->zSize; z++)
-	{
-		printf("Z=%d\n\n", z);
-		for (int y = 0; y < args->ySize; y++)
-		{
-			for (int x = 0; x < args->xSize; x++)
-			{
-				printf("%lu ", sample[offset(x,y,z,args)]);
-			}
-			printf("\n");
-		}
-	}
-}
-
 void printVectors(long * vector, struct arguments * parameters) {
 	if(parameters->mode == FULL) {
 		printf("N DIFFRENCE: %ld \n", vector[parameters->precedingBands]);

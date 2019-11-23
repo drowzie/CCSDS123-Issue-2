@@ -1,10 +1,60 @@
 import tabula
 import csv
 
+#functions
+# Generate consecutive zeros based on r
+def generateConsZero(r):
+    txt = ""
+    for y in range(r):
+        txt = txt + "0"
+    return txt
+
+# generate input code from low <= r <= high into rzeros + outputhex
+def generate(low, high, outputhex):
+    inputList = []
+    outputCode = []
+    for x in range(low,high+1):
+        inputList.append(generateConsZero(x))
+        outputCode.append(bin(outputhex + int(hex(x),16))[:1:-1])
+    return inputList,outputCode
+
+def reverseHex(number):
+    x = bin(int(number))[:1:-1]
+    value = int(x, 2)
+    return hex(value)
+
+# Turn Eg. 0^{2}2324X to 0002324X
+# Check for ^ in text
+def fullNumberFromString(txt):
+    txt = txt.split("}")
+    reps = txt[0].split("^{")
+    returnString = ""
+    for x in range(int(reps[1])):
+        returnString = returnString + reps[0]
+    return returnString + txt[1]
+
+# Check for r in text
+def extractRFromString(txt):
+    x = txt.replace("}", "")
+    x = x.split(",")
+    number = x[0].split("^{")
+    minMax = x[1].split("≤r≤")
+    return number[0], minMax
+
+
+#Returns bitsize and hexvalue
+def extractOutputCode(outputTxt):
+    print(outputTxt)
+    if("'" in outputTxt):
+        txt = outputTxt.split("'h")
+    else:
+        txt = outputTxt.split("’h")
+    return txt[0], txt[1]
+
+
 tabula.convert_into("a.pdf", "test.csv", output_format="csv", pages='90')
 
 table = "10"
-
 
 with open('test.csv', mode='r') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -34,41 +84,12 @@ with open('test.csv', mode='r') as csv_file:
 inputList = inputCodes0 + inputCodes1 + inputCodes2
 outputList = outputCodes0 + outputCodes1 + outputCodes2
 
-# Turn Eg. 0^{2}2324X to 0002324X
-# Check for ^ in text
-def fullNumberFromString(txt):
-    txt = txt.split("}")
-    reps = txt[0].split("^{")
-    returnString = ""
-    for x in range(int(reps[1])):
-        returnString = returnString + reps[0]
-    return returnString + txt[1]
-
-# Check for r in text
-def extractRFromString(txt):
-    x = txt.replace("}", "")
-    x = x.split(",")
-    number = x[0].split("^{")
-    minMax = x[1].split("≤r≤")
-    return number[0], minMax
-
-
-#Returns bitsize and hexvalue
-def extractOutputCode(outputTxt):
-    print(outputTxt)
-    if("'" in outputTxt):
-        txt = outputTxt.split("'h")
-    else: 
-        txt = outputTxt.split("’h")
-    return txt[0], txt[1]
-
-
 file = open("codeTable"+table+".c", "w+")
 file.write("char codeTable" + table +"[][128] = {\r\n")
 for i in inputList:
-    if("r" in i):
-        
-    elif("^" in i):
+    #if("r" in i):
+
+    if("^" in i):
         i = fullNumberFromString(i)
     file.write('"'+i+'"'+",")
 file.write("\r\n};")
