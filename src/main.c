@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <time.h> 
+#include <time.h>
 
 #include "cliparser/include/cli.h"
 #include "predictor/include/predictor.h"
@@ -26,7 +26,7 @@ void insertTestData(unsigned long * sample, struct arguments * args){
 	sample[offset(1,2,0, args)] = 259;
 	sample[offset(2,2,0, args)] = 253;
 	sample[offset(3,2,0, args)] = 255;
- 
+
 	sample[offset(0,3,0, args)] = 256;
 	sample[offset(1,3,0, args)] = 257;
 	sample[offset(2,3,0, args)] = 258;
@@ -65,9 +65,9 @@ void writearary(unsigned long * sample, struct arguments * args) {
 			{
 				fwrite(&sample[offset(x,y,z,args)], 1, 2, file);
 			}
-			
+
 		}
-		
+
 	}
 
 	fclose(file);
@@ -85,18 +85,19 @@ int main(int argc, char **argv) {
 	struct arguments parameters;
 	parseArguments(argc, argv, &parameters);
 
-	/* 
-		LOSSLESS Compression: 
+	/*
+		LOSSLESS Compression:
 	 */
+	 
 
 	long  sMin = 0;
     long  sMax = (0x1 << parameters.dynamicRange) - 1;
     long  sMid = 0x1 << (parameters.dynamicRange - 1);
 	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
-	// IMAGE	
+	// IMAGE
 	unsigned long * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
 	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
-	/* 
+	/*
 		PREDICTION SPECIFIC MALLOCS
 	*/
 	long * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(long));
@@ -104,13 +105,13 @@ int main(int argc, char **argv) {
 
 	long * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
 	long * diffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
-	/* 
+	/*
 		ENCODING SPECIFIC MALLOCS
 	*/
     unsigned int * counter = malloc(sizeof(unsigned int)*parameters.zSize);
     unsigned int * accumulator = malloc(sizeof(unsigned int)*parameters.zSize);
 
-	
+
 	FILE * residuals_file = NULL;
 	residuals_file = fopen("Encoded.bin", "w+b");
 	FILE * deltafile = fopen("Encoded.bin.delta", "wb");
@@ -120,7 +121,7 @@ int main(int argc, char **argv) {
 	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
 
-	/* 
+	/*
 		ACTUAL COMPUTATION/WRITING
 	*/
 	//printf("Det funker ikke\n");
@@ -147,15 +148,15 @@ int main(int argc, char **argv) {
 	printf("\n");
 	printf("Compute time:          %7.3f ms\n",computeTime*1e3);
 
-	
+
 
 	// Fill up the rest to fill up word size
  	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
 	if(numPaddingbits < parameters.wordSize*8 && numPaddingbits > 0) {
 		writeBits(0, numPaddingbits, &numWrittenBits, &totalWrittenBytes, residuals_file);
-	} 
+	}
 
-	/* 
+	/*
 		END OF COMPUTATION/WRITING
 	*/
 
@@ -169,7 +170,7 @@ int main(int argc, char **argv) {
 	free(sample);
 	free(localsum);
  	free(weights);
-	free(diffVector); 
+	free(diffVector);
 
 	return 0;
 }

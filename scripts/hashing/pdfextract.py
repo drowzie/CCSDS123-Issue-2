@@ -11,15 +11,17 @@ def generateConsZero(r):
 
 # generate input code from low <= r <= high into rzeros + outputhex
 #Return inputlist, outputcodes, and their bitsizes
-def generate(low, high, inputSuffix, outputhex, bitsize):
+def generate(low, high, inputSuffix, outputhex, bitsize, multiple):
     inputList = []
     outputCode = []
     bitSizes = []
+    reverse = []
     for x in range(low,high+1):
         inputList.append(generateConsZero(x) + inputSuffix)
-        outputCode.append(hex(int(bin(outputhex + int(hex(x),16))[:1:-1],2)))
+        outputCode.append(hex(outputhex + (multiple * int(hex(x),16))))
         bitSizes.append(bitsize)
-    return inputList,outputCode, bitSizes
+        reverse.append(1)
+    return inputList,outputCode, bitSizes, reverse
 
 def reverseHex(number):
     x = bin(int(number))[:1:-1]
@@ -51,11 +53,14 @@ def extractOutputCode(outputTxt):
         txt = outputTxt.split("’h")
     return txt[0], hex(int(txt[1], 16))
 
-# Extract hex value from eg. FFB from (FFB + r)
+# Extract hex and multiple value from eg. FFB from (FFB + 2 * r)
 def extractOutputHex(txt):
     txt = txt.split("+")
     txt[0] = txt[0].replace("(", "")
-    return int(txt[0],16)
+    multiple = 1
+    if("2" in txt[1]):
+        multiple = 2
+    return int(txt[0],16), multiple
 
 
 # Extract numbits + outputhex for functoin generate
@@ -75,11 +80,11 @@ test2 = "<12'h(FFA+r)>"
 def generateInputOutputR(input, output):
     suffixCode, rRange = extractRFromString(input)
     bitsize, outputHex = extractOutputIfReverse(output)
-    return generate(rRange[0], rRange[1], suffixCode, outputHex, bitsize)
+    return generate(rRange[0], rRange[1], suffixCode, outputHex[0], bitsize, outputHex[1])
 
-tabula.convert_into("a.pdf", "test.csv", output_format="csv", pages='93')
+tabula.convert_into("a.pdf", "test.csv", output_format="csv", pages='94')
 
-table = "12"
+table = "15"
 
 with open('test.csv', mode='r') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -93,13 +98,13 @@ with open('test.csv', mode='r') as csv_file:
     outputCodes2 = []
 
     for enum, row in enumerate(csv_reader):
-        if(line_count > 13 and line_count < 33):
+        if(line_count > 24  and line_count < 27):
             print(row)
             inputCodes0.append(row[0])
-            inputCodes1.append(row[2])
+            #inputCodes1.append(row[2])
             #inputCodes2.append(row[4])
             outputCodes0.append(row[1])
-            outputCodes1.append(row[3])
+            #outputCodes1.append(row[3])
             #outputCodes2.append(row[5])
             line_count+=1
         else:
@@ -113,24 +118,28 @@ outputList = outputCodes0 + outputCodes1 + outputCodes2
 bitsizes = []
 outPutValues = []
 inputcodes = []
+ifReverse = []
 for i,o in zip(inputList, outputList):
     if(i):
         if("^{r}" in i):
-            inp, output, bitsize = generateInputOutputR(i,o)
+            inp, output, bitsize, reverse = generateInputOutputR(i,o)
             inputcodes.extend(inp)
             outPutValues.extend(output)
             bitsizes.extend(bitsize)
+            ifReverse.extend(reverse)
         elif("^" in i):
             inCode = fullNumberFromString(i)
             bitsize, outputvalue = extractOutputCode(o)
             bitsizes.append(bitsize)
             outPutValues.append(outputvalue)
             inputcodes.append(inCode)
+            ifReverse.append(0)
         else:
             bitsize, outputvalue = extractOutputCode(o)
             outPutValues.append(outputvalue)
             bitsizes.append(bitsize)
             inputcodes.append(i)
+            ifReverse.append(0)
 
 file = open("codeTable" + table + ".c", "w+")
 file.write("char codeTable"+ table +"[][128] = {\n")
@@ -138,14 +147,19 @@ for i in inputcodes:
     file.write('"'+ i + '"' + ", ")
 file.write("\n};\n")
 
-file.write("uint32_t outPutCodes" + table + "[] = {\n")
+file.write("uint32_t outputCodes" + table + "[] = {\n")
 for i in outPutValues:
-    file.write(i+", ")
+    file.write(str(i)+", ")
 file.write("\n};\n")
 
-file.write("uint8_t bitSizes"+table+"[] = {\n")
+file.write("uint8_t bitSize"+table+"[] = {\n")
 for i in bitsizes:
     file.write(i + ", ")
+file.write("\n};\n")
+
+file.write("uint8_t shouldReverse"+table+"[] = {\n")
+for i in ifReverse:
+    file.write(str(i) + ", ")
 file.write("\n};\n")
 
 file.close()
