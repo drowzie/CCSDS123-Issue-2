@@ -15,7 +15,7 @@ void writeBits(unsigned long writeBits, unsigned int numBits, unsigned int * num
     for(int i = numBits - 1; i >= 0; i--){
         storedValue |= ((writeBits >> i) & 0x1) << (7 - (*numWrittenBits));
         (*numWrittenBits)++;
-        if(*numWrittenBits >= 8){
+        if(*numWrittenBits >= 8) {
             fwrite(&storedValue, 1, 1, stream);
             *numWrittenBits = 0;
             (*totalWrittenBytes)++;
