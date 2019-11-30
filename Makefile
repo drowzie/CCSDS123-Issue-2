@@ -15,4 +15,5 @@ main.out: $(obj)
 
 .PHONY: clean
 clean:
-	rm -f $(obj) myprog
+	rm -f $(obj) main.out
+	
