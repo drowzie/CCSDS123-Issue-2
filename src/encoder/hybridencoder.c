@@ -1,46 +1,53 @@
 #include "include/encoder.h"
 #include "../cliparser/include/cli.h"
 #include "../predictor/include/predictor.h"
+
 #include <math.h>
+
+#define HASH_DEBUG
 
 char activePrefix[16][256];
 uint8_t codeIndex[16] = {12, 10, 8, 6, 6, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 0};
 
 // Internal functions
-int encodeHighEntropy(unsigned long sampleToEncode, uint32_t *  counter, uint32_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
+int encodeHighEntropy(uint32_t sampleToEncode, uint16_t *  counter, uint64_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
 int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
 /* 
     END OF HEADER
 */
 
-int encodeHybrid(unsigned long sampleToEncode, uint32_t * counter, uint32_t * accumulator, int x, int y, int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
+void initHybrid(uint16_t * counter, uint64_t * accumulator, int z, struct arguments * parameters) {
+    counter[z] = parameters->initialY;
+    accumulator[z] = parameters->initialAccumulator;
+}
+
+int encodeHybrid(uint32_t sampleToEncode, uint16_t * counter, uint64_t * accumulator, int x, int y, int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
     if(x+y == 0) {
+        initHybrid(counter, accumulator, z, parameters);
         writeBits(sampleToEncode, parameters->dynamicRange, numWrittenBits, totalWrittenBytes, fileToWrite);
         return 0;
     }
-
     if(counter[z] < ((1 << parameters->yStar) - 1)) {
         accumulator[z] += 4*sampleToEncode;
         counter[z]++;
-    } else{
+    } else {
+        writeBits(extractBits(accumulator[z], 1), 1, numWrittenBits, totalWrittenBytes, fileToWrite);
         accumulator[z] = (accumulator[z] + 4*sampleToEncode + 1) >> 1;
         counter[z] = (counter[z] + 1) >> 1;
-        writeBits(extractBits(accumulator[z], 1), 1, numWrittenBits, totalWrittenBytes, fileToWrite);
     }
 
-    int treshold = 0;
+    uint32_t treshold = (accumulator[z] << 14)/counter[z];
 
     if (treshold > 303336) {
         encodeHighEntropy(sampleToEncode, counter, accumulator, z, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
-    } else {
+     } else {
         encodeLowEntropy(treshold, sampleToEncode, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
-    }
-
+    } 
     return 0;
 }
 
 
-int encodeHighEntropy(unsigned long sampleToEncode, uint32_t *  counter, uint32_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
+int encodeHighEntropy(uint32_t sampleToEncode, uint16_t *  counter, uint64_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
     long kValue = log2((accumulator[z] + ((49*counter[z]) >> 7)) / counter[z]);
         kValue = kValue < 0 ? 0 : kValue;
         kValue = kValue > (parameters->dynamicRange - 2) ? parameters->dynamicRange - 2 : kValue;
@@ -70,215 +77,253 @@ void encodeXvalues(unsigned long sampleToEncode, unsigned int * totalWrittenByte
 /* 
     encodeLowEntropy will add the input character based on treshold value, and if the hash exists then it will write and reset the sequence.
  */
+
+
 int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
     char input;
     if (treshold <= 303336 && treshold > 225404) {
-        if(sampleToEncode > codeIndex[15]) {
+        int index = 0;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[15]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[15], &input);
-        codeWord *code = searchHash(activePrefix[15], 15);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[15], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 225404 && treshold > 166979) {
-        if(sampleToEncode > codeIndex[14]) {
+        int index = 1;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[14]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[14], &input);
-        codeWord *code = searchHash(activePrefix[14], 14);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[14], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 166979 && treshold > 128672) {
-        if(sampleToEncode > codeIndex[13]) {
+        int index = 2;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[13]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[13], &input);
-        codeWord *code = searchHash(activePrefix[13], 13);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[13], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 128672 && treshold > 95597) {
-        if(sampleToEncode > codeIndex[12]) {
+        int index = 3;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[12]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[12], &input);
-        codeWord *code = searchHash(activePrefix[12], 12);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[12], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 95597 && treshold > 69670) {
-        if(sampleToEncode > codeIndex[11]) {
+        int index = 4;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[11]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
         strcat(activePrefix[11], &input);
-        codeWord *code = searchHash(activePrefix[11], 11);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[11], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 69670 && treshold > 50678) {
-        if(sampleToEncode > codeIndex[10]) {
+        int index = 5;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[10]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[10], &input);
-        codeWord *code = searchHash(activePrefix[10], 10);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[10], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 50678 && treshold > 34898) {
-        if(sampleToEncode > codeIndex[9]) {
+        int index = 6;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[9]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[9], &input);
-        codeWord *code = searchHash(activePrefix[9], 9);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[9], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 34898 && treshold > 23331) {
-        if(sampleToEncode > codeIndex[8]) {
+        int index = 7;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[8]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[8], &input);
-        codeWord *code = searchHash(activePrefix[8], 8);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[8], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 23331 && treshold > 14935) {
-        if(sampleToEncode > codeIndex[7]) {
+        int index = 8;
+        printf("heeey\n");
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[7]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[7], &input);
-        codeWord *code = searchHash(activePrefix[7], 7);
+        strncat(activePrefix[index], &input, 1);
+        printf("code is%s \n", activePrefix[index]);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[7], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 14935 && treshold > 9282) {
-        if(sampleToEncode > codeIndex[6]) {
+        int index = 9;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[6]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[6], &input);
-        codeWord *code = searchHash(activePrefix[6], 6);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[6], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 9282 && treshold > 5510) {
-        if(sampleToEncode > codeIndex[5]) {
+        int index = 10;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[5]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[5], &input);
-        codeWord *code = searchHash(activePrefix[5], 5);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[5], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 5510 && treshold > 3195) {
-        if(sampleToEncode > codeIndex[4]) {
+        int index = 11;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[4]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[4], &input);
-        codeWord *code = searchHash(activePrefix[4], 4);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[4], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 3195 && treshold > 1928) {
-        if(sampleToEncode > codeIndex[3]) {
+        int index = 12;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[3]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[3], &input);
-        codeWord *code = searchHash(activePrefix[3], 3);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[3], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 1928 && treshold > 1112) {
-        if(sampleToEncode > codeIndex[2]) {
+        int index = 13;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[2]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[2], &input);
-        codeWord *code = searchHash(activePrefix[2], 2);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[2], "");
+            sprintf(activePrefix[index], "");
         }
     } else if (treshold <= 1112 && treshold > 408) {
-        if(sampleToEncode > codeIndex[1]) {
+        int index = 14;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[1]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[1], &input);
-        codeWord *code = searchHash(activePrefix[1], 1);
+        strncat(activePrefix[index], &input, 1);
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[1], "");
+            sprintf(activePrefix[index], "");
         }
     } else {
-        if(sampleToEncode > codeIndex[0]) {
+        int index = 15;
+        if(sampleToEncode > codeIndex[index]) {
             input = 'X';
-            encodeXvalues(sampleToEncode-codeIndex[0]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
+            encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            input = (char)sampleToEncode;
+            sprintf(&input, "%x", sampleToEncode);
         }
-        strcat(activePrefix[0], &input);
-        codeWord *code = searchHash(activePrefix[0], 0);
+        strncat(activePrefix[index], &input, 1);
+
+        codeWord *code = searchHash(activePrefix[index], index);
         if (code != NULL) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
-            sprintf(activePrefix[0], "");
+            sprintf(activePrefix[index], "");
         }
     }
+}
+
+// Final encoding after each 
+void encodeFinalStage(uint64_t * accumulator, int z,  unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
+    for (uint8_t i = 0; i < 16; i++) {
+        codeWord *code = searchFlushHash(activePrefix[i], i);
+        if (code == NULL) {
+            // Fucky wucky
+            printf("Did not find a flush word for flush %d of flushword %s \n", i, activePrefix[i]);
+            exit(1);
+        }
+        writeBits((uint64_t)code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
+        sprintf(activePrefix[i], "");
+    }
+    writeBits(accumulator[z], parameters->dynamicRange+parameters->yStar+2, numWrittenBits, totalWrittenBytes, fileToWrite);
+    writeBits(1, 1, numWrittenBits, totalWrittenBytes, fileToWrite);
+    fillBits(numWrittenBits, totalWrittenBytes, parameters, fileToWrite);
 }

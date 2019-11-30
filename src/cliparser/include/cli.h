@@ -1,4 +1,5 @@
 #pragma once
+#include <inttypes.h>
 
 struct arguments {
     enum { FULL, REDUCED } mode;
@@ -22,7 +23,8 @@ struct arguments {
     char yStar;
     unsigned int initialK;
     unsigned int uMax;
-
+    // Hybrid encoder specific
+    uint64_t initialAccumulator;
     unsigned int wordSize;
 
     int debugMode;

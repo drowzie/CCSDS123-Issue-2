@@ -21,7 +21,7 @@ void wideNeighborLocalSum(unsigned long * sample, long * localsum, int x, int y,
 }
 
 void narrowNeighborLocalSum(unsigned long * sample, long * localsum, int smid, int x, int y, int z, struct arguments * parameters) {
-	if(!(x == 0 && y == 0)) {
+	if(x+y != 0) {
 		if (y > 0 && x > 0 && x < parameters->xSize-1) {
 			localsum[offset(x,y,z,parameters)] = sample[offset(x-1,y-1,z, parameters)] +  (2 * sample[offset(x,y-1,z, parameters)]) + sample[offset(x+1,y-1,z, parameters)];
 		} else if (y == 0 && x > 0 && y > 0) {
@@ -30,10 +30,8 @@ void narrowNeighborLocalSum(unsigned long * sample, long * localsum, int smid, i
 			localsum[offset(x,y,z,parameters)] = 2 * (sample[offset(x,y-1,z, parameters)] + sample[offset(x+1,y-1,z, parameters)]);
 		} else if (y > 0 && x == parameters->xSize - 1) {
 			localsum[offset(x,y,z,parameters)] = 2 * (sample[offset(x-1,y-1,z, parameters)] + sample[offset(x,y-1,z, parameters)]);
-		} else if (y == 0 && x > 0 && z == 0) {
-			localsum[offset(x,y,z,parameters)] = 4 * smid;
 		} else {
-			printf("narrowNeighborLocalSum should not arrive here\n");
+			localsum[offset(x,y,z,parameters)] = 4 * smid;
 		}
 	}
 }

@@ -13,7 +13,7 @@ long * diffVector, long * weights, long sMin, long sMax, long sMid, int maximumE
 	*/
 	long long highResSample = 0;
 	if(x+y != 0) {
-		wideNeighborLocalSum(inputSample,localsum,x,y,z,parameters);
+		narrowNeighborLocalSum(inputSample,localsum, sMid, x,y,z,parameters);
 		BuildDiffVector(inputSample,localsum,diffVector,x,y,z,parameters);
 		highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
 	}

@@ -108,8 +108,8 @@ int main(int argc, char **argv) {
 	/*
 		ENCODING SPECIFIC MALLOCS
 	*/
-    unsigned int * counter = malloc(sizeof(unsigned int)*parameters.zSize);
-    unsigned int * accumulator = malloc(sizeof(unsigned int)*parameters.zSize);
+    uint16_t * counter = malloc(sizeof(uint16_t)*parameters.zSize);
+    uint64_t * accumulator = malloc(sizeof(uint64_t)*parameters.zSize);
 
 
 	FILE * residuals_file = NULL;
@@ -129,32 +129,32 @@ int main(int argc, char **argv) {
 	char filename[128] = "HICO_L2_1.BSQ";
 	readIntSamples(&parameters, filename, sample);
 
+
+	hashFlushCodes();
+	hashCodeTableValues();
+
+
+	//codeWord *test = searchHash("0000", 8);
 	start = walltime();
  	for (int z = 0; z < parameters.zSize; z++) {
-		counter[z] = 1 << parameters.initialY;
-		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
+		//counter[z] = 1 << parameters.initialY;
+		//accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (int y = 0; y < parameters.ySize; y++) {
 			for (int x = 0; x < parameters.xSize; x++) {
-				unsigned long tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
+				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
 				residuals[offset(x,y,z,&parameters)] = tempResidual;
 				fwrite((&tempResidual), 1, 2, deltafile);
-				encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				//encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
+		encodeFinalStage(accumulator,z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 	}
 	computeTime += walltime() - start;
 
 	printf("\n");
 	printf("Compute time:          %7.3f ms\n",computeTime*1e3);
-
-
-
-	// Fill up the rest to fill up word size
- 	int numPaddingbits = (parameters.wordSize*8) - (((totalWrittenBytes*8) + numWrittenBits) % (parameters.wordSize*8));
-	if(numPaddingbits < parameters.wordSize*8 && numPaddingbits > 0) {
-		writeBits(0, numPaddingbits, &numWrittenBits, &totalWrittenBytes, residuals_file);
-	}
 
 	/*
 		END OF COMPUTATION/WRITING

@@ -4,10 +4,10 @@
 #include "include/flushTables.h"
 
 codeWord *hashedCodeWord0, *hashedCodeWord1, *hashedCodeWord2, *hashedCodeWord3, *hashedCodeWord4, *hashedCodeWord5, *hashedCodeWord6, *hashedCodeWord7, 
-    *hashedCodeWord8, *hashedCodeWord9, *hashedCodeWord10, *hashedCodeWord11, *hashedCodeWord12, *hashedCodeWord13, *hashedCodeWord14, *hashedCodeWord15 = NULL;
+    *hashedCodeWord8, *hashedCodeWord9, *hashedCodeWord10, *hashedCodeWord11, *hashedCodeWord12, *hashedCodeWord13, *hashedCodeWord14, *hashedCodeWord15;
 
 codeWord *hashedFlushTable0, *hashedFlushTable1, *hashedFlushTable2, *hashedFlushTable3, *hashedFlushTable4, *hashedFlushTable5, *hashedFlushTable6, *hashedFlushTable7, 
-    *hashedFlushTable8, *hashedFlushTable9, *hashedFlushTable10, *hashedFlushTable11, *hashedFlushTable12, *hashedFlushTable13, *hashedFlushTable14, *hashedFlushTable15 = NULL;
+    *hashedFlushTable8, *hashedFlushTable9, *hashedFlushTable10, *hashedFlushTable11, *hashedFlushTable12, *hashedFlushTable13, *hashedFlushTable14, *hashedFlushTable15;
 
 //Hash all values in codetables according to codeWord struct.
 //It is a very ugly solution but it was a quick one.
@@ -159,6 +159,7 @@ void hashCodeTableValues() {
 }
 
 codeWord *searchHash(char searchString[256], int table) {
+    printf("search%shey \n ", searchString);
     codeWord *tmp;
     switch (table)
     {
@@ -213,6 +214,7 @@ codeWord *searchHash(char searchString[256], int table) {
     default:
         break;
     }
+    printf("finish\n ");
     return tmp;
 }
 
@@ -222,7 +224,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix0[i]);
         tmp->bitSize = bitSizeFlush0[i];
-        tmp->codeWordValue = outPutCodes0[i];
+        tmp->codeWordValue = flushWord0[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable0, inputCodeword, tmp);
     }
@@ -231,7 +233,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix1[i]);
         tmp->bitSize = bitSizeFlush1[i];
-        tmp->codeWordValue = outPutCodes1[i];
+        tmp->codeWordValue = flushWord1[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable1, inputCodeword, tmp);
     }
@@ -240,7 +242,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix2[i]);
         tmp->bitSize = bitSizeFlush2[i];
-        tmp->codeWordValue = outPutCodes2[i];
+        tmp->codeWordValue = flushWord2[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable2, inputCodeword, tmp);
     }
@@ -249,7 +251,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix3[i]);
         tmp->bitSize = bitSizeFlush3[i];
-        tmp->codeWordValue = outPutCodes3[i];
+        tmp->codeWordValue = flushWord3[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable3, inputCodeword, tmp);
     }
@@ -258,7 +260,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix4[i]);
         tmp->bitSize = bitSizeFlush4[i];
-        tmp->codeWordValue = outPutCodes4[i];
+        tmp->codeWordValue = flushWord4[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable4, inputCodeword, tmp);
     }
@@ -267,7 +269,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix5[i]);
         tmp->bitSize = bitSizeFlush5[i];
-        tmp->codeWordValue = outPutCodes5[i];
+        tmp->codeWordValue = flushWord5[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable5, inputCodeword, tmp);
     }
@@ -276,7 +278,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix6[i]);
         tmp->bitSize = bitSizeFlush6[i];
-        tmp->codeWordValue = outPutCodes6[i];
+        tmp->codeWordValue = flushWord6[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable6, inputCodeword, tmp);
     }
@@ -285,7 +287,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix7[i]);
         tmp->bitSize = bitSizeFlush7[i];
-        tmp->codeWordValue = outPutCodes7[i];
+        tmp->codeWordValue = flushWord7[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable7, inputCodeword, tmp);
     }
@@ -294,7 +296,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix8[i]);
         tmp->bitSize = bitSizeFlush8[i];
-        tmp->codeWordValue = outPutCodes8[i];
+        tmp->codeWordValue = flushWord8[i];
         tmp->ifReverse = 0;
         HASH_ADD_STR(hashedFlushTable8, inputCodeword, tmp);
     }
@@ -303,7 +305,7 @@ void hashFlushCodes() {
         codeWord *tmp = malloc(sizeof(codeWord));
         strcpy(tmp->inputCodeword, activePrefix9[i]);
         tmp->bitSize = bitSizeFlush9[i];
-        tmp->codeWordValue = outPutCodes9[i];
+        tmp->codeWordValue = flushWord9[i];
         tmp->ifReverse = shouldReverseFlush9[i];
         HASH_ADD_STR(hashedFlushTable9, inputCodeword, tmp);
     }

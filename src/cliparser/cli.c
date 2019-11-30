@@ -48,22 +48,27 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 
 void parseArguments(int argc, char **argv, struct arguments * arguments) {
+    // Image sizes, defaults to test pattern
+    arguments->xSize = 4;
+    arguments->ySize = 4;
+    arguments->zSize = 2;
+    // Prediction specific
 	arguments->mode = REDUCED;
     arguments->dynamicRange = 16;
 	arguments->precedingBands = 15;
     arguments->weightResolution = 13;
     arguments->theta = 0;
-    arguments->xSize = 4;
-    arguments->ySize = 4;
-    arguments->zSize = 2;
     arguments->weightMin = -1;
     arguments->weightMax = 3;
     arguments->weightInterval = 6;
     arguments->debugMode = 0;
+    // Encoder specifics
     arguments->uMax = 16;
     arguments->initialK = 5;
     arguments->initialY = 1;
     arguments->wordSize = 4;
+    // Hybrid Encoder
+    arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
