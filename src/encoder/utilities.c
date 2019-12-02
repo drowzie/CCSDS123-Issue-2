@@ -7,6 +7,7 @@ long extractBits(long number, int k) {
     return (((1 << k) - 1) & (number)); 
 }
 
+
 unsigned char storedValue = 0;
 /*
     write #numBits of writeBits into the file stream. numWrittenBits and storedValue 

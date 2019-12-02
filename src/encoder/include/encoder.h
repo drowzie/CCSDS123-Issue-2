@@ -5,10 +5,10 @@
 
 
 typedef struct codeWord {
-    char inputCodeword[256]; //Input codeword
-    uint32_t codeWordValue; // Output Codeword
-    uint8_t bitSize; //given bitsize
-    uint8_t ifReverse; // If ouput should be reversed (0/1)
+    char * inputCodeword; //Input codeword
+    uint64_t codeWordValue; // Output Codeword
+    int bitSize; //given bitsize
+    int ifReverse; // If ouput should be reversed (0/1)
     UT_hash_handle hh;
 } codeWord;
 
@@ -17,10 +17,10 @@ int encodeHybrid(uint32_t sampleToEncode, uint16_t * counter, uint64_t * accumul
 void encodeFinalStage(uint64_t * accumulator, int z,  unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
 
 // Hash specifics
-codeWord *searchHash(char searchString[256], int table);
+codeWord *searchHash(char * searchString, int table);
 void hashCodeTableValues();
 void hashFlushCodes();
-codeWord *searchFlushHash(char searchString[256], int table);
+codeWord *searchFlushHash(char * searchString, int table);
 
 
 //Utils

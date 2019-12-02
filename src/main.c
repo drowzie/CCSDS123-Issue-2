@@ -111,7 +111,6 @@ int main(int argc, char **argv) {
     uint16_t * counter = malloc(sizeof(uint16_t)*parameters.zSize);
     uint64_t * accumulator = malloc(sizeof(uint64_t)*parameters.zSize);
 
-
 	FILE * residuals_file = NULL;
 	residuals_file = fopen("Encoded.bin", "w+b");
 	FILE * deltafile = fopen("Encoded.bin.delta", "wb");
@@ -132,10 +131,12 @@ int main(int argc, char **argv) {
 
 	hashFlushCodes();
 	hashCodeTableValues();
+	
 
+	printf("Computing \n");
 
-	//codeWord *test = searchHash("0000", 8);
 	start = walltime();
+	printf("begun \n");
  	for (int z = 0; z < parameters.zSize; z++) {
 		//counter[z] = 1 << parameters.initialY;
 		//accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
@@ -149,8 +150,9 @@ int main(int argc, char **argv) {
 				encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
-		encodeFinalStage(accumulator,z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+		encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 	}
+	printf("begun \n");
 	computeTime += walltime() - start;
 
 	printf("\n");

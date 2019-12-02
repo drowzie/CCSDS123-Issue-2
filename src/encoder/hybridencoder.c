@@ -4,14 +4,12 @@
 
 #include <math.h>
 
-#define HASH_DEBUG
-
-char activePrefix[16][256];
+char activePrefix[16][3000] = {"", "", "", "", "", "", "", "" , "" , "", "" , "" , "" , "", "" ,""};
 uint8_t codeIndex[16] = {12, 10, 8, 6, 6, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 0};
 
 // Internal functions
 int encodeHighEntropy(uint32_t sampleToEncode, uint16_t *  counter, uint64_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
-int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
+int encodeLowEntropy(uint64_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
 /* 
     END OF HEADER
 */
@@ -36,7 +34,7 @@ int encodeHybrid(uint32_t sampleToEncode, uint16_t * counter, uint64_t * accumul
         counter[z] = (counter[z] + 1) >> 1;
     }
 
-    uint32_t treshold = (accumulator[z] << 14)/counter[z];
+    uint64_t treshold = (accumulator[z] << 14)/counter[z];
 
     if (treshold > 303336) {
         encodeHighEntropy(sampleToEncode, counter, accumulator, z, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
@@ -78,20 +76,21 @@ void encodeXvalues(unsigned long sampleToEncode, unsigned int * totalWrittenByte
     encodeLowEntropy will add the input character based on treshold value, and if the hash exists then it will write and reset the sequence.
  */
 
-
-int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
+int encodeLowEntropy(uint64_t treshold, unsigned long sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
     char input;
+    codeWord *code = NULL;
+    //printf("treshold is %d \n", treshold);
     if (treshold <= 303336 && treshold > 225404) {
         int index = 0;
         if(sampleToEncode > codeIndex[index]) {
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
         }
@@ -101,13 +100,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 166979 && treshold > 128672) {
         int index = 2;
@@ -115,13 +115,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 128672 && treshold > 95597) {
         int index = 3;
@@ -129,13 +130,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 95597 && treshold > 69670) {
         int index = 4;
@@ -143,13 +145,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
-        strcat(activePrefix[11], &input);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        strncat(activePrefix[index], &input, 1);
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 69670 && treshold > 50678) {
         int index = 5;
@@ -157,11 +160,11 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
         }
@@ -171,13 +174,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 34898 && treshold > 23331) {
         int index = 7;
@@ -185,29 +189,29 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 23331 && treshold > 14935) {
         int index = 8;
-        printf("heeey\n");
         if(sampleToEncode > codeIndex[index]) {
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        printf("code is%s \n", activePrefix[index]);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 14935 && treshold > 9282) {
         int index = 9;
@@ -215,13 +219,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 9282 && treshold > 5510) {
         int index = 10;
@@ -229,13 +234,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 5510 && treshold > 3195) {
         int index = 11;
@@ -243,13 +249,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 3195 && treshold > 1928) {
         int index = 12;
@@ -257,13 +264,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 1928 && treshold > 1112) {
         int index = 13;
@@ -271,13 +279,14 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     } else if (treshold <= 1112 && treshold > 408) {
         int index = 14;
@@ -285,36 +294,38 @@ int encodeLowEntropy(uint32_t treshold, unsigned long sampleToEncode, unsigned i
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+         if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
-        }
+            
+        } 
     } else {
         int index = 15;
         if(sampleToEncode > codeIndex[index]) {
             input = 'X';
             encodeXvalues(sampleToEncode-codeIndex[index]-1, totalWrittenBytes, numWrittenBits, fileToWrite, parameters);
         } else {
-            sprintf(&input, "%x", sampleToEncode);
+            sprintf(&input, "%X", sampleToEncode);
         }
         strncat(activePrefix[index], &input, 1);
-
-        codeWord *code = searchHash(activePrefix[index], index);
-        if (code != NULL) {
+        code = searchHash(activePrefix[index], index);
+        if (code) {
             writeBits(code->codeWordValue, code->bitSize, numWrittenBits, totalWrittenBytes, fileToWrite);
             sprintf(activePrefix[index], "");
+            
         }
     }
 }
 
 // Final encoding after each 
 void encodeFinalStage(uint64_t * accumulator, int z,  unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters) {
+    codeWord *code = NULL;
     for (uint8_t i = 0; i < 16; i++) {
-        codeWord *code = searchFlushHash(activePrefix[i], i);
+        code = searchFlushHash(activePrefix[i], i);
         if (code == NULL) {
             // Fucky wucky
             printf("Did not find a flush word for flush %d of flushword %s \n", i, activePrefix[i]);
