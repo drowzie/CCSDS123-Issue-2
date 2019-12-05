@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include "../predictor/include/predictor.h"
 
 /* 
     Read Integer samples into memory
  */
-int readIntSamples(struct arguments * parameters, char fileName[128], unsigned long * samples) {
+int readIntSamples(struct arguments * parameters, char fileName[128], uint32_t * samples) {
     int buffer = 0;
     FILE * sampleFile = fopen(fileName, "r+b");
     int readbytes = 0;

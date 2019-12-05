@@ -7,7 +7,7 @@
 	Chapter 4.5 in CCSDS 123 Issue 2
 */
 
-void BuildDiffVector(unsigned long * sample, long * localsum, long * diffVector, int x, int y, int z, struct arguments * parameters) {
+void BuildDiffVector(uint32_t * sample, int32_t * localsum, int32_t * diffVector, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	int currentPredBands = z < parameters->precedingBands ? z : parameters->precedingBands;
 	if (z > 0) {
 		for (int i = 0; i < currentPredBands; i++) {
@@ -23,7 +23,7 @@ void BuildDiffVector(unsigned long * sample, long * localsum, long * diffVector,
 	}
 }
 
-int centralLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, int z, struct arguments * parameters) {
+int32_t centralLocalDiffrence(uint32_t * sample, int32_t * localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if(x+y != 0) {
 		return (sample[offset(x,y,z,parameters)] << 2) - localsum[offset(x,y,z,parameters)];
 	} else {
@@ -32,7 +32,7 @@ int centralLocalDiffrence(unsigned long * sample, long * localsum, int x, int y,
 }
 
 
-int northLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, int z, struct arguments * parameters) {
+int32_t northLocalDiffrence(uint32_t * sample, int32_t * localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if (y > 0) {
 		return (4*sample[offset(x,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)];
 	} else {
@@ -40,7 +40,7 @@ int northLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, i
 	}
 }
 
-int westLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, int z, struct arguments * parameters) {
+int32_t westLocalDiffrence(uint32_t * sample, int32_t * localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if ( x > 0 && y > 0) {
 		return (4*sample[offset(x-1,y,z, parameters)]) - localsum[offset(x,y,z,parameters)];
 	} else if (x == 0 && y > 0) {
@@ -50,7 +50,7 @@ int westLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, in
 	}
 }
 
-int northwestLocalDiffrence(unsigned long * sample, long * localsum, int x, int y, int z, struct arguments * parameters) {
+int32_t northwestLocalDiffrence(uint32_t * sample, int32_t * localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if (x > 0 && y > 0) {
 		return (4*sample[offset(x-1,y-1,z, parameters)]) - localsum[offset(x,y,z,parameters)];
 	} else if (x == 0 && y > 0) {

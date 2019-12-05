@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <inttypes.h>
 
 #include "cliparser/include/cli.h"
 #include "predictor/include/predictor.h"
@@ -11,7 +12,7 @@
 #include <sys/time.h>
 
 
-void insertTestData(unsigned long * sample, struct arguments * args){
+void insertTestData(uint32_t * sample, struct arguments * args){
 	sample[offset(0,0,0, args)] = 255;
 	sample[offset(1,0,0, args)] = 256;
 	sample[offset(2,0,0, args)] = 257;
@@ -54,7 +55,7 @@ void insertTestData(unsigned long * sample, struct arguments * args){
 	sample[offset(3,3,1, args)] = 257;
 }
 
-void writearary(unsigned long * sample, struct arguments * args) {
+void writearary(uint32_t * sample, struct arguments * args) {
     FILE * file = fopen("test.bin", "w+b");
 
 	for (int z = 0; z < args->zSize; z++)
@@ -90,21 +91,21 @@ int main(int argc, char **argv) {
 	 */
 	 
 
-	long  sMin = 0;
-    long  sMax = (0x1 << parameters.dynamicRange) - 1;
-    long  sMid = 0x1 << (parameters.dynamicRange - 1);
-	printf("sMax %ld,SMin %ld,smid %ld \n", sMax, sMin, sMid);
+	int32_t  sMin = 0;
+    int32_t  sMax = (0x1 << parameters.dynamicRange) - 1;
+    int32_t  sMid = 0x1 << (parameters.dynamicRange - 1);
+	printf("sMax %d,SMin %d,smid %d \n", sMax, sMin, sMid);
 	// IMAGE
-	unsigned long * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
-	unsigned long * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
+	uint32_t * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
+	uint32_t * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
 	/*
 		PREDICTION SPECIFIC MALLOCS
 	*/
-	long * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(long));
-	unsigned long * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(unsigned long));
+	int32_t * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(int32_t));
+	uint32_t * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
 
-	long * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
-	long * diffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(long ));
+	int32_t * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(int32_t ));
+	int32_t * diffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(int32_t ));
 	/*
 		ENCODING SPECIFIC MALLOCS
 	*/
@@ -128,20 +129,18 @@ int main(int argc, char **argv) {
 	char filename[128] = "HICO_L2_1.BSQ";
 	readIntSamples(&parameters, filename, sample);
 
-
 	hashFlushCodes();
 	hashCodeTableValues();
-	
 
 	printf("Computing \n");
 
 	start = walltime();
 	printf("begun \n");
- 	for (int z = 0; z < parameters.zSize; z++) {
+ 	for (uint16_t z = 0; z < parameters.zSize; z++) {
 		//counter[z] = 1 << parameters.initialY;
 		//accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
-		for (int y = 0; y < parameters.ySize; y++) {
-			for (int x = 0; x < parameters.xSize; x++) {
+		for (uint16_t y = 0; y < parameters.ySize; y++) {
+			for (uint16_t x = 0; x < parameters.xSize; x++) {
 				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
 				residuals[offset(x,y,z,&parameters)] = tempResidual;

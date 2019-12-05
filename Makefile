@@ -8,7 +8,7 @@ csrc = $(wildcard src/*.c) \
 
 obj = $(csrc:.c=.o)
 
-LDFLAGS = -g -Wall -lm
+LDFLAGS = -O3 -g -Wall -lm
 
 main.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)

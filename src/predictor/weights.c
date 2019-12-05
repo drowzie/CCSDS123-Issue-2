@@ -7,7 +7,7 @@
     Calloc defaults 0 for directional
 */
 
-void initWeights(long * weights, int z, struct arguments * parameters) {
+void initWeights(int32_t * weights, uint16_t z, struct arguments * parameters) {
     if(parameters->precedingBands > 0){
         weights[0] = 7 << (parameters->weightResolution - 3);
         int currentPredictionBand = z < parameters->precedingBands ? z : parameters->precedingBands;
@@ -26,7 +26,7 @@ void initWeights(long * weights, int z, struct arguments * parameters) {
 /* 
     Update_weights will update weights according to chapter 4.10 in Issue 2
  */
-void updateWeightVector(long * weights, long * diffVector, long long error, int x, int y, int z, int interbandOffset, int intrabandExponent, struct arguments * parameters) {
+void updateWeightVector(int32_t * weights, int32_t * diffVector, int64_t error, uint16_t x, uint16_t y, uint16_t z, int interbandOffset, int intrabandExponent, struct arguments * parameters) {
     
     long weightLimit = 0x1 << (parameters->weightResolution + 2);
     int signError = error < 0 ? -1 : 1;
