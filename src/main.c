@@ -77,7 +77,7 @@ void writearary(uint32_t * sample, struct arguments * args) {
 
 int main(int argc, char **argv) {
 	double start;
-	double computeTime=0;
+	double computeTime=0, predictionTime = 0, encoderTime = 0;
 	double readTime=0;
   	double writeTime=0;
 	/*
@@ -133,18 +133,18 @@ int main(int argc, char **argv) {
 	hashCodeTableValues();
 
 	printf("Computing \n");
-
 	start = walltime();
 	printf("begun \n");
+
  	for (uint16_t z = 0; z < parameters.zSize; z++) {
 		//counter[z] = 1 << parameters.initialY;
 		//accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (uint16_t y = 0; y < parameters.ySize; y++) {
 			for (uint16_t x = 0; x < parameters.xSize; x++) {
-				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 0, 0, 0, 0, 0);
+				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 2, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
 				residuals[offset(x,y,z,&parameters)] = tempResidual;
-				fwrite((&tempResidual), 1, 2, deltafile);
+				//fwrite((&tempResidual), 1, 2, deltafile);
 				//encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 				encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
@@ -155,7 +155,9 @@ int main(int argc, char **argv) {
 	computeTime += walltime() - start;
 
 	printf("\n");
-	printf("Compute time:          %7.3f ms\n",computeTime*1e3);
+	printf("Compute time:          %4.6f s\n",computeTime);
+	printf("Average time per pixel(compute time/total pixels):          %7.4f ms\n",(computeTime*1e3)/(double)(parameters.xSize*parameters.ySize*parameters.zSize));
+	printf("Average time per frame(compute time/z pixels):          %7.4f ms\n",(computeTime*1e3)/(double)(parameters.zSize));
 
 	/*
 		END OF COMPUTATION/WRITING
