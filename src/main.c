@@ -89,19 +89,13 @@ int main(int argc, char **argv) {
 	/*
 		LOSSLESS Compression:
 	 */
-	 
 
-	int32_t  sMin = 0;
-    int32_t  sMax = (0x1 << parameters.dynamicRange) - 1;
-    int32_t  sMid = 0x1 << (parameters.dynamicRange - 1);
-	printf("sMax %d,SMin %d,smid %d \n", sMax, sMin, sMid);
 	// IMAGE
 	uint32_t * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
 	uint32_t * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
 	/*
 		PREDICTION SPECIFIC MALLOCS
 	*/
-	int32_t * localsum = malloc(parameters.xSize*parameters.ySize*parameters.zSize* sizeof(int32_t));
 	uint32_t * sampleRep = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
 
 	int32_t * weights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(int32_t ));
@@ -112,8 +106,7 @@ int main(int argc, char **argv) {
     uint16_t * counter = malloc(sizeof(uint16_t)*parameters.zSize);
     uint64_t * accumulator = malloc(sizeof(uint64_t)*parameters.zSize);
 
-	FILE * residuals_file = NULL;
-	residuals_file = fopen("Encoded.bin", "w+b");
+	FILE * residuals_file = fopen("Encoded.bin", "w+b");
 	FILE * deltafile = fopen("Encoded.bin.delta", "wb");
 	//insertTestData(sample, &parameters);
 	//writearary(sample, &parameters);
@@ -125,31 +118,29 @@ int main(int argc, char **argv) {
 		ACTUAL COMPUTATION/WRITING
 	*/
 	//printf("Det funker ikke\n");
-	printf("Started reading\n");
-	char filename[128] = "HICO_L2_1.BSQ";
-	readIntSamples(&parameters, filename, sample);
+	printf("Started reading %d\n", parameters.debugMode);
+	readIntSamples(&parameters, parameters.fileName, sample);
 
-	hashFlushCodes();
-	hashCodeTableValues();
+	//hashFlushCodes();
+	//hashCodeTableValues();
 
 	printf("Computing \n");
 	start = walltime();
 	printf("begun \n");
 
  	for (uint16_t z = 0; z < parameters.zSize; z++) {
-		//counter[z] = 1 << parameters.initialY;
-		//accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
+		counter[z] = 1 << parameters.initialY;
+		accumulator[z] = ((counter[z] * ((3 * (1 << (parameters.initialK+6))) - 49)) >> 7);
 		for (uint16_t y = 0; y < parameters.ySize; y++) {
 			for (uint16_t x = 0; x < parameters.xSize; x++) {
-				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, localsum, diffVector, weights, sMin, sMax, sMid, 2, 0, 0, 0, 0);
+				uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
 				// Currently only BSQ encoding mode
-				residuals[offset(x,y,z,&parameters)] = tempResidual;
-				//fwrite((&tempResidual), 1, 2, deltafile);
+				fwrite((&tempResidual), 1, 4, deltafile);
 				//encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
-				encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+				//encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 			}
 		}
-		encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+		//encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 	}
 	printf("begun \n");
 	computeTime += walltime() - start;
@@ -171,7 +162,6 @@ int main(int argc, char **argv) {
 	free(counter);
 	free(sampleRep);
 	free(sample);
-	free(localsum);
  	free(weights);
 	free(diffVector);
 

@@ -23,6 +23,7 @@ static struct argp_option options[] = {
     { "xSize", 'x', "xSIZE", 0, "x size of image"},
     { "ySize", 'y', "ySIZE", 0, "y size of image"},
     { "zSize", 'z', "zSIZE", 0, "z size of image"},
+    { "inputFILE", 'i', "FILE", 0, "FILENAME"},
     
     { 0 } 
 };
@@ -32,6 +33,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct arguments *arguments = state->input;
     switch (key) {
     case 'd': arguments->dynamicRange = atoi(arg); break;
+    case 'i': arguments->fileName = arg; break;
     case 777: arguments->debugMode = 1; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
@@ -67,6 +69,10 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->initialK = 5;
     arguments->initialY = 1;
     arguments->wordSize = 4;
+    arguments->sMin = 0;
+    arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
+    arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
+
     // Hybrid Encoder
     arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);

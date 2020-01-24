@@ -6,27 +6,26 @@
 #include <math.h>
 
 
-uint32_t predict(uint32_t * inputSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, uint32_t * sampleRep, int32_t * localsum, 
-int32_t * diffVector, int32_t * weights, int32_t sMin, int32_t sMax, int32_t sMid, uint32_t maximumError, uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent) {
+uint32_t predict(uint32_t * inputSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, uint32_t * sampleRep, 
+int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent) {
 	/* 
 		Calculate local sum and build up the diffrential vector at a given sample.
 	*/
 	int64_t highResSample = 0;
 	if(x+y != 0) {
-		narrowNeighborLocalSum(sampleRep,localsum, sMid, x,y,z,parameters);
-		BuildDiffVector(sampleRep,localsum,diffVector,x,y,z,parameters);
-		highResSample = computeHighResPredSample(localsum, weights, diffVector, sMid, sMin, sMax, x, y, z, parameters);
+		BuildDiffVector(sampleRep, diffVector, x, y, z, parameters, wideNeighborLocalSum);
+		highResSample = computeHighResPredSample(weights, diffVector, x, y, z, wideNeighborLocalSum(inputSample, x, y, z, parameters), parameters);
 	}
 	/* 
 		Step for calculating prediction sample and doubleResPredSample
 	*/
 	int64_t doubleResPredSample = 0; // Calculated inside function computePredictedSample
-	int64_t predictedSample = computePredictedSample(inputSample, &doubleResPredSample, localsum, highResSample, sMid, sMin, sMax, x, y, z, parameters);
+	int64_t predictedSample = computePredictedSample(inputSample, &doubleResPredSample, highResSample, x, y, z, parameters);
 	/* 
 		Quantization/Sample "compression" part
 	*/
 	int32_t quantizerIndex = quantization(inputSample, predictedSample, maximumError, x, y, z, parameters);
-	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, sMin, sMax);
+	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
 	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, sampleDamping, sampleOffset, x, y, z, parameters);
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
@@ -34,7 +33,7 @@ int32_t * diffVector, int32_t * weights, int32_t sMin, int32_t sMax, int32_t sMi
 		int64_t doubleResError = (clippedBin << 1) - doubleResPredSample;
 		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
-	int32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, sMin, sMax, maximumError, x, y, z, parameters);
+	int32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 
 	if(parameters->debugMode != 0) {
 		printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
@@ -54,11 +53,11 @@ int32_t * diffVector, int32_t * weights, int32_t sMin, int32_t sMax, int32_t sMi
 	CCSDS 123 Issue 2 Chapter 4.11
  */
 
-int32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, int32_t smin, int32_t smax, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {	
+int32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {	
 	int64_t omega = 0;
 	//unsigned int signValue = ((int)doubleResPredSample & 0x1) != 0 ? -1 : 1;
-	int64_t temp1 = predictedSample - smin;
-	int64_t temp2 = smax - predictedSample;
+	int64_t temp1 = predictedSample - parameters->sMin;
+	int64_t temp2 = parameters->sMax - predictedSample;
 	
 	if (x == 0 && y == 0) {
 		omega = temp1 > temp2 ? temp2 : temp1;
@@ -87,10 +86,10 @@ int32_t quantization(uint32_t * sample, int64_t predictedSample, uint32_t maximu
 	}
 }
 
-int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample, int32_t * localsum, int64_t highResPredSample, int32_t smid, int32_t smin, int32_t smax, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
+int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample, int64_t highResPredSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if(x+y == 0) {
 		if(z == 0 || parameters->precedingBands == 0) {
-			(*doubleResPredSample) = smid << 1;
+			(*doubleResPredSample) = parameters->sMid << 1;
 		} else {
 			(*doubleResPredSample) = sample[offset(x,y,z-1,parameters)] << 1;
 		}
@@ -100,8 +99,8 @@ int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample,
 	return (*doubleResPredSample) >> 1;
 }
 
-int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int32_t sMin, int32_t sMax) {
-	return clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), sMin, sMax);
+int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, struct arguments * parameters) {
+	return clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), parameters->sMin, parameters->sMax);
 }
 
 uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, int sampleDamping, int sampleOffset, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
@@ -117,22 +116,22 @@ uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32
     }
 }
 
-int64_t computeHighResPredSample(int32_t * localsum, int32_t * weightVector, int32_t * diffVector, int32_t smid, int32_t smin, int32_t smax, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
+int64_t computeHighResPredSample(int32_t * weightVector, int32_t * diffVector, uint16_t x, uint16_t y, uint16_t z, int32_t localsum, struct arguments * parameters) {
 	int32_t diffPredicted = 0;
 	int64_t predictedSample = 0;
 	diffPredicted = innerProduct(weightVector, diffVector, z, parameters);
 	///////
-	int32_t tmpValue = localsum[offset(x,y,z, parameters)] - (smid << 2);
+	int32_t tmpValue = localsum - (parameters->sMid << 2);
 	int sgn = tmpValue < 0;
 	tmpValue = abs(tmpValue) << parameters->weightResolution;
 	tmpValue = sgn ? -1 * tmpValue : tmpValue;
 	predictedSample = modR(diffPredicted + tmpValue, parameters->registerSize);
 	////
-	predictedSample += (smid << (parameters->weightResolution + 2));
+	predictedSample += (parameters->sMid << (parameters->weightResolution + 2));
 	predictedSample += (1 << (parameters->weightResolution + 1));
 
-	int32_t lowerbounds = (smin<<(parameters->weightResolution+2));
-	int32_t higherbounds = (smax<<(parameters->weightResolution+2) + (1 << (parameters->weightResolution+1)));
+	int32_t lowerbounds = (parameters->sMin<<(parameters->weightResolution+2));
+	int32_t higherbounds = (parameters->sMax<<(parameters->weightResolution+2) + (1 << (parameters->weightResolution+1)));
 	return clip(predictedSample, lowerbounds, higherbounds);
 }
 

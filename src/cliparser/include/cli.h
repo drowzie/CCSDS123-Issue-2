@@ -2,6 +2,9 @@
 #include <inttypes.h>
 
 struct arguments {
+    //NAME
+    char *fileName;
+    //
     enum { FULL, REDUCED } mode;
     int precedingBands;
     // User parameters
@@ -26,6 +29,10 @@ struct arguments {
     // Hybrid encoder specific
     uint64_t initialAccumulator;
     unsigned int wordSize;
+    //
+    int32_t  sMin;
+    int32_t  sMax;
+    int32_t  sMid;
 
     int debugMode;
 };

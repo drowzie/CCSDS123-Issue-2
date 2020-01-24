@@ -10,9 +10,7 @@ uint8_t codeIndex[16] = {12, 10, 8, 6, 6, 4, 4, 4, 2, 2, 2, 2, 2, 2, 2, 0};
 // Internal functions
 int encodeHighEntropy(uint32_t sampleToEncode, uint16_t *  counter, uint64_t * accumulator,int z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
 int encodeLowEntropy(uint64_t treshold, uint32_t sampleToEncode, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, FILE * fileToWrite, struct arguments * parameters);
-/* 
-    END OF HEADER
-*/
+
 
 void initHybrid(uint16_t * counter, uint64_t * accumulator, int z, struct arguments * parameters) {
     counter[z] = parameters->initialY;
