@@ -4,8 +4,11 @@
 struct arguments {
     //NAME
     char *fileName;
+    enum imageTypeEnum {BSQ = 0, BIP, BIL} imageOrder;
+    enum imageTypeEnum encodeOrder;
     //
-    enum { FULL, REDUCED } mode;
+    enum { FULL = 0, REDUCED } mode;
+    enum { SIGNED, UNSIGNED } pixelType;
     int precedingBands;
     // User parameters
     unsigned char dynamicRange; // D register

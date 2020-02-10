@@ -31,7 +31,6 @@ int32_t centralLocalDiffrence(uint32_t * sample, uint16_t x, uint16_t y, uint16_
 	}
 }
 
-
 int32_t northLocalDiffrence(uint32_t * sample, uint16_t x, uint16_t y, uint16_t z, int32_t localsum, struct arguments * parameters) {
 	if (y > 0) {
 		return (4*sample[offset(x,y-1,z, parameters)]) - localsum;

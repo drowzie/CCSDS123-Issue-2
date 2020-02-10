@@ -12,6 +12,9 @@ static char args_doc[] = "";
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, OPTION_ARG_OPTIONAL, "Calculate in Full Prediction Mode (DEFAULT=REDUCED)"},
     { "debug", 777, 0, 0, "DEBUG MODE"},
+    { "SIGNED", 788, 0, 0, "SIGNED PIXELS"},
+    { "imageorder", 'o',  "ORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
+    { "imageorder", 'O',  "ENCODEORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
     { "Dynamic Range", 'd', "DYNRANGE", 0, "Register D size, #2-16"},
     { "Register size", 'r', "REGSIZE", 0, "Register R size, max{32, D +  Ω +  2} ≤ R ≤ 64"},
     { "Sample resolution", 's', "SRES", 0, "Sample Resolution(Θ), #0-4"},
@@ -24,17 +27,23 @@ static struct argp_option options[] = {
     { "ySize", 'y', "ySIZE", 0, "y size of image"},
     { "zSize", 'z', "zSIZE", 0, "z size of image"},
     { "inputFILE", 'i', "FILE", 0, "FILENAME"},
-    
     { 0 } 
 };
 
-
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct arguments *arguments = state->input;
+    int order;
     switch (key) {
     case 'd': arguments->dynamicRange = atoi(arg); break;
+    case 'o': 
+        arguments->imageOrder = atoi(arg);
+        break;
+    case 'O': 
+        arguments->encodeOrder = atoi(arg);
+        break;
     case 'i': arguments->fileName = arg; break;
     case 777: arguments->debugMode = 1; break;
+    case 788: arguments->pixelType = SIGNED; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
 	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 15 ? 15 : atoi(arg)  ; break;
@@ -72,7 +81,9 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->sMin = 0;
     arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
     arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
-
+    arguments->pixelType = UNSIGNED;
+    arguments->imageOrder = BSQ;
+    arguments->encodeOrder = BSQ;
     // Hybrid Encoder
     arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);

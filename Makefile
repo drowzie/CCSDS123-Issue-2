@@ -1,3 +1,5 @@
+CC=gcc
+
 csrc = $(wildcard src/*.c) \
        $(wildcard src/predictor/*.c) \
 	   $(wildcard src/cliparser/*.c) \
@@ -8,7 +10,7 @@ csrc = $(wildcard src/*.c) \
 
 obj = $(csrc:.c=.o)
 
-LDFLAGS = -O3 -g -Wall -lm
+LDFLAGS = -O3 -g -Wall -lm -fopenmp
 
 main.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)

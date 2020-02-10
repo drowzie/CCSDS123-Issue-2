@@ -9,46 +9,22 @@
     Read Integer samples into memory
  */
 int readIntSamples(struct arguments * parameters, char fileName[128], uint32_t * samples) {
-    int buffer = 0;
+    int16_t buffer = 0;
     FILE * sampleFile = fopen(fileName, "r+b");
-    int readbytes = 0;
+    int32_t readbytes = 0;
+	uint32_t signMask = 0xFFFF << parameters->dynamicRange;
     while(fread(&buffer, 1, 2, sampleFile) == 2 && readbytes < parameters->xSize*parameters->ySize*parameters->zSize){
         //buffer = ((buffer >> 8) & 0x00FF) | ((buffer << 8) & 0xFF00);
-        samples[readbytes] = buffer;
+		//buffer |= signMask;
+		if(parameters->pixelType == SIGNED) {
+			samples[readbytes] = (uint16_t) (buffer + parameters->sMid); // Signed to unsigned
+		} else {
+			samples[readbytes] = buffer;
+		}
         readbytes++;
     }    
     fclose(sampleFile);
     return 0;
-}
-
-
-void printArrayLong(unsigned long * sample, struct arguments * args) {
-	for (int z = 0; z < args->zSize; z++)
-	{
-		printf("Z=%d\n\n", z);
-		for (int y = 0; y < args->ySize; y++)
-		{
-			for (int x = 0; x < args->xSize; x++)
-			{
-				printf("%lu ", sample[offset(x,y,z,args)]);
-			}
-			printf("\n");
-		}
-	}
-}
-
-void writeArrayLong(unsigned long * sample, FILE * file, struct arguments * args) {
-	for (int z = 0; z < args->zSize; z++)
-	{
-		for (int y = 0; y < args->ySize; y++)
-		{
-			for (int x = 0; x < args->xSize; x++)
-			{
-                long residual = sample[offset(x,y,z,args)];
-				fwrite(&residual, 1, 2, file);
-			}
-		}
-	}
 }
 
 double walltime ( void ) {

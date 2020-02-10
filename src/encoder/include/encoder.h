@@ -3,7 +3,6 @@
 #include "uthash.h"
 #include "../../cliparser/include/cli.h"
 
-
 typedef struct codeWord {
     char * inputCodeword; //Input codeword
     uint64_t codeWordValue; // Output Codeword

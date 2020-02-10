@@ -14,13 +14,13 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	int64_t highResSample = 0;
 	if(x+y != 0) {
 		BuildDiffVector(sampleRep, diffVector, x, y, z, parameters, wideNeighborLocalSum);
-		highResSample = computeHighResPredSample(weights, diffVector, x, y, z, wideNeighborLocalSum(inputSample, x, y, z, parameters), parameters);
+		highResSample = computeHighResPredSample(weights, diffVector, x, y, z, wideNeighborLocalSum(sampleRep, x, y, z, parameters), parameters);
 	}
 	/* 
 		Step for calculating prediction sample and doubleResPredSample
 	*/
 	int64_t doubleResPredSample = 0; // Calculated inside function computePredictedSample
-	int64_t predictedSample = computePredictedSample(inputSample, &doubleResPredSample, highResSample, x, y, z, parameters);
+	int64_t predictedSample = computePredictedSample(sampleRep, &doubleResPredSample, highResSample, x, y, z, parameters);
 	/* 
 		Quantization/Sample "compression" part
 	*/
@@ -33,18 +33,8 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 		int64_t doubleResError = (clippedBin << 1) - doubleResPredSample;
 		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
-	int32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
+	uint32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 
-	if(parameters->debugMode != 0) {
-		printf("At X: %d, Y: %d, Z: %d, \n",x,y,z);
-		printf("High resolution Sample is %ld \n", highResSample);
-		printf("predicted value is %ld \n", predictedSample);
-		printf("quantizer to sample is %d \n", quantizerIndex);
-		printf("input sample is %u \n", inputSample[offset(x,y,z, parameters)]);
-		printf("sample rep is %u \n", sampleRep[offset(x,y,z, parameters)]);
-		printf("Mapped residual: %u \n", residual);
-		printf("---------------------------\n");
-	}
 	return residual;
 }
 
@@ -53,7 +43,7 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	CCSDS 123 Issue 2 Chapter 4.11
  */
 
-int32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {	
+uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {	
 	int64_t omega = 0;
 	//unsigned int signValue = ((int)doubleResPredSample & 0x1) != 0 ? -1 : 1;
 	int64_t temp1 = predictedSample - parameters->sMin;
