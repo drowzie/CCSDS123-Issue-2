@@ -1,5 +1,5 @@
 #include "include/predictor.h"
-#include "../cliparser/include/cli.h"
+#include "cliparser/include/cli.h"
 #include <stdio.h>
 
 int64_t modR(int64_t x, int64_t R){

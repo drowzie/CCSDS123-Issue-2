@@ -1,6 +1,6 @@
 #include "include/encoder.h"
-#include "../cliparser/include/cli.h"
-#include "../predictor/include/predictor.h"
+#include "cliparser/include/cli.h"
+#include "predictor/include/predictor.h"
 #include <math.h>
 
 
