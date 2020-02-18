@@ -46,7 +46,6 @@ int main(int argc, char **argv) {
 	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
 	readIntSamples(&parameters, parameters.fileName, sample);
-
 	/* 
 		Hybrid Encoder Related Init Functions
 	*/
@@ -55,25 +54,31 @@ int main(int argc, char **argv) {
 
 	printf("Computing \n");
 	start = walltime();
-	//#pragma omp parallel for num_threads(16)
 	printf("Encode order: %d Offset order: %d \n", parameters.encodeOrder, parameters.imageOrder);
 	if(parameters.encodeOrder == BSQ) {
 		for (uint16_t z = 0; z < parameters.zSize; z++) {
 			for (uint16_t y = 0; y < parameters.ySize; y++) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
-					residuals[offset(x,y,z,&parameters)] = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
+					uint32_t tempRes = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
 					0, 0, 0, 0, 0);
-					unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
+					fwrite((&tempRes), 1, 4, deltafile);
+					
+/* 					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
 					0, 0, 0, 0, 0);
+
+					if(residuals[offset(x,y,z,&parameters)] != decompressedSamples[offset(x,y,z,&parameters)]) {
+						printf("Residual %d vs unpredicted %d \n", residuals[offset(x,y,z,&parameters)], decompressedSamples[offset(x,y,z,&parameters)]);
+						exit(0);
+					}  */
 					// Currently only BSQ encoding mode
-					fwrite((&decompressedSamples[offset(x,y,z,&parameters)]), 2, 1, deltafile);
 					//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 					//encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 				}
 			}
 			//encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 		}
-	} else if (parameters.encodeOrder == BIP) {
+	} 
+	/* else if (parameters.encodeOrder == BIP) {
 		for (uint16_t y = 0; y < parameters.ySize; y++) {
 			for (uint16_t x = 0; x < parameters.xSize; x++) {
 				for (uint16_t z = 0; z < parameters.zSize; z++) {
@@ -95,7 +100,7 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
-	}
+	} */
 	computeTime += walltime() - start;
 
 	printf("\n");

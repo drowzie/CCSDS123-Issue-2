@@ -30,11 +30,11 @@ int sgn(int64_t x) {
     }
 }
 
-int sgnPlus(int32_t x) {
+int sgnPlus(int64_t x) {
     if (x >= 0) {
-        return 1;
+        return (1);
     } else {
-        return 0;
+        return (-1);
     }
 }
 

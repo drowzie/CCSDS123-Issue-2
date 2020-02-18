@@ -16,16 +16,16 @@ int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample,
 int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, struct arguments * parameters);
 uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, int sampleDamping, int sampleOffset, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 int32_t quantization(uint32_t * sample, int64_t predictedSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
-uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
+int32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 
 /* 
     Functions for decompression
 */
-void unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
+uint32_t unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
     int32_t * diffVector, int32_t * weights, uint32_t maximumError, 
     uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent);
 
-int32_t inverseMappedResidual(uint32_t * mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError,
+int32_t inverseMappedResidual(uint32_t  mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError,
     uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 
 int32_t deQuantizizer(int32_t quantizerIndex, uint32_t maximumError, uint16_t x, uint16_t y);
@@ -53,4 +53,4 @@ int offset(uint16_t x, uint16_t y, uint16_t z, struct arguments * args);
 int64_t clip(int64_t x, int64_t xmin, int64_t xmax);
 int64_t modR(int64_t x, int64_t R);
 int sgn(int64_t x);
-int sgnPlus(int32_t x);
+int sgnPlus(int64_t x);

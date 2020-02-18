@@ -9,7 +9,7 @@
     Requires the whole Image to be processed by decoder beforehand.
 */
 
-void unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
+uint32_t unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
 int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent) {
 	/*
 		Calculate local sum and build up the diffrential vector at a given sample.
@@ -27,47 +27,34 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	/* 
 		Decompress
 	*/
-	int32_t quantizerIndex = inverseMappedResidual(residuals, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
+	int32_t quantizerIndex = inverseMappedResidual(residuals[offset(x,y,z,parameters)], predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 	int32_t delta = deQuantizizer(quantizerIndex, maximumError, x, y);
-	if(x+y == 10) {
-		exit(0);
-	}
-	samples[offset(x,y,z,parameters)] = delta + predictedSample;
-	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
+	uint32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
 	} else {
 		int64_t doubleResError = (clippedBin << 1) - doubleResPredSample;
 		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
+	return delta + predictedSample;
 }
 
-int32_t inverseMappedResidual(uint32_t * mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
-    int64_t omega = 0;
+int32_t inverseMappedResidual(uint32_t mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
+    uint64_t omega;
+	int32_t quantizerIndex = 0;
 	int64_t temp1 = predictedSample - parameters->sMin;
 	int64_t temp2 = parameters->sMax - predictedSample;
-    int32_t quantizerIndex = 0;
-
-	if (x+y == 0) {
-		omega = temp1 > temp2 ? temp2 : temp1;
+	omega = temp1 > temp2 ? temp2 : temp1;
+	if(mappedResidual > (omega<<1)) {
+		int sgn = sgnPlus(predictedSample-parameters->sMid);
+		return (omega-mappedResidual)*sgn;
 	} else {
-		temp1 = ((temp1 + maximumError) / ((maximumError << 1) + 1));
-		temp2 = ((temp2 + maximumError) / ((maximumError << 1) + 1));
-		omega = temp1 > temp2 ? temp2 : temp1;
-    }
-	
-    if(mappedResidual[offset(x,y,z, parameters)] > 2 * predictedSample) {
-        quantizerIndex = omega - mappedResidual[offset(x,y,z, parameters)] * sgnPlus(predictedSample - parameters->sMid);
-    } else {
-        if(mappedResidual[offset(x,y,z, parameters)] % 2 == 0) {
-            int sign = (doubleResPredSample % 2) != 0 ? -1 : 1;
-            quantizerIndex = sign * (mappedResidual[offset(x,y,z, parameters)] >> 1);
-        } else {
-            int sign = (doubleResPredSample % 2) != 0 ? 1 : -11;
-            quantizerIndex = sign * (mappedResidual[offset(x,y,z, parameters)] >> 1);
-        }
-    }
-    return quantizerIndex;
+		if((mappedResidual+doubleResPredSample) % 2 == 0) {
+			return ((mappedResidual+1) / 2);
+		} else {
+			return -1 * ((mappedResidual+1) / 2);
+		}
+	}
 }
 
 /*
