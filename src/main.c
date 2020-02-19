@@ -56,21 +56,23 @@ int main(int argc, char **argv) {
 	start = walltime();
 	printf("Encode order: %d Offset order: %d \n", parameters.encodeOrder, parameters.imageOrder);
 	if(parameters.encodeOrder == BSQ) {
+		//#pragma omp parallel for num_threads(16)
 		for (uint16_t z = 0; z < parameters.zSize; z++) {
 			for (uint16_t y = 0; y < parameters.ySize; y++) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
-					uint32_t tempRes = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
+					residuals[offset(x,y,z,&parameters)] = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
 					0, 0, 0, 0, 0);
-					fwrite((&tempRes), 1, 4, deltafile);
-					
-/* 					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
+					//fwrite((&tempRes), 4, 1, deltafile);
+
+					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
 					0, 0, 0, 0, 0);
 
-					if(residuals[offset(x,y,z,&parameters)] != decompressedSamples[offset(x,y,z,&parameters)]) {
-						printf("Residual %d vs unpredicted %d \n", residuals[offset(x,y,z,&parameters)], decompressedSamples[offset(x,y,z,&parameters)]);
-						exit(0);
-					}  */
-					// Currently only BSQ encoding mode
+					if(sample[offset(x,y,z,&parameters)] != decompressedSamples[offset(x,y,z,&parameters)]) {
+						printf("x:%d, y %d \n",x,y);
+						printf("Sample %d vs unpredicted %d \n", sample[offset(x,y,z,&parameters)], decompressedSamples[offset(x,y,z,&parameters)]);
+						
+					} 
+					//Currently only BSQ encoding mode
 					//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 					//encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 				}
@@ -78,7 +80,7 @@ int main(int argc, char **argv) {
 			//encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 		}
 	} 
-	/* else if (parameters.encodeOrder == BIP) {
+	else if (parameters.encodeOrder == BIP) {
 		for (uint16_t y = 0; y < parameters.ySize; y++) {
 			for (uint16_t x = 0; x < parameters.xSize; x++) {
 				for (uint16_t z = 0; z < parameters.zSize; z++) {
@@ -100,7 +102,7 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
-	} */
+	}
 	computeTime += walltime() - start;
 
 	printf("\n");

@@ -29,22 +29,30 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	*/
 	int32_t quantizerIndex = inverseMappedResidual(residuals[offset(x,y,z,parameters)], predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 	int32_t delta = deQuantizizer(quantizerIndex, maximumError, x, y);
-	uint32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
+	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
+
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
 	} else {
 		int64_t doubleResError = (clippedBin << 1) - doubleResPredSample;
 		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
-	return delta + predictedSample;
+	return predictedSample + delta;
 }
 
 int32_t inverseMappedResidual(uint32_t mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
-    uint64_t omega;
-	int32_t quantizerIndex = 0;
+    int64_t omega = 0;
 	int64_t temp1 = predictedSample - parameters->sMin;
 	int64_t temp2 = parameters->sMax - predictedSample;
-	omega = temp1 > temp2 ? temp2 : temp1;
+	
+	if (x == 0 && y == 0) {
+		omega = temp1 > temp2 ? temp2 : temp1;
+	} else {
+		temp1 = ((temp1 + maximumError) / ((maximumError << 1) + 1));
+		temp2 = ((temp2 + maximumError) / ((maximumError << 1) + 1));
+		omega = temp1 > temp2 ? temp2 : temp1;
+	}
+	
 	if(mappedResidual > (omega<<1)) {
 		int sgn = sgnPlus(predictedSample-parameters->sMid);
 		return (omega-mappedResidual)*sgn;

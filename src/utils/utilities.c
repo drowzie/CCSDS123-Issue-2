@@ -9,7 +9,7 @@
     Read Integer samples into memory
  */
 int readIntSamples(struct arguments * parameters, char fileName[128], uint32_t * samples) {
-    int16_t buffer = 0;
+    int buffer = 0;
     FILE * sampleFile = fopen(fileName, "r+b");
     int32_t readbytes = 0;
 	uint32_t signMask = 0xFFFF << parameters->dynamicRange;

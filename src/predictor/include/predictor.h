@@ -1,5 +1,5 @@
 #pragma once
-#include "../../cliparser/include/cli.h"
+#include "cliparser/include/cli.h"
 #include <inttypes.h>
 
 
@@ -16,7 +16,7 @@ int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample,
 int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, struct arguments * parameters);
 uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, int sampleDamping, int sampleOffset, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 int32_t quantization(uint32_t * sample, int64_t predictedSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
-int32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
+uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 
 /* 
     Functions for decompression
