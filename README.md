@@ -1,1 +1,1 @@
-# CCSDS123-Issue-2
+# CCSDS123 Compression algorithm in C
