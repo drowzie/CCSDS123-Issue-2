@@ -68,7 +68,6 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->dynamicRange = 16;
 	arguments->precedingBands = 15;
     arguments->weightResolution = 13;
-    arguments->theta = 0;
     arguments->weightMin = -1;
     arguments->weightMax = 3;
     arguments->weightInterval = 6;
@@ -77,15 +76,13 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->uMax = 16;
     arguments->initialK = 5;
     arguments->initialY = 1;
-    arguments->wordSize = 4;
+    arguments->wordSize = sizeof(int); // The computer word size
     arguments->sMin = 0;
     arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
     arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
     arguments->pixelType = UNSIGNED;
     arguments->imageOrder = BSQ;
     arguments->encodeOrder = BSQ;
-    // Hybrid Encoder
-    arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;

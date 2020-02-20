@@ -30,14 +30,6 @@ int sgn(int64_t x) {
     }
 }
 
-int sgnPlus(int64_t x) {
-    if (x >= 0) {
-        return (1);
-    } else {
-        return (-1);
-    }
-}
-
 int64_t clip( int64_t x, int64_t xmin, int64_t xmax)  {
     if (x > xmax) {
         return xmax;

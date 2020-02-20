@@ -8,7 +8,7 @@
 /* 
     Read Integer samples into memory
  */
-int readIntSamples(struct arguments * parameters, char fileName[128], uint32_t * samples) {
+int readIntSamples(struct arguments * parameters, char fileName[128], uint16_t * samples) {
     int buffer = 0;
     FILE * sampleFile = fopen(fileName, "r+b");
     int32_t readbytes = 0;

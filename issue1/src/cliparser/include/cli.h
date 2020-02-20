@@ -7,14 +7,12 @@ struct arguments {
     enum imageTypeEnum {BSQ = 0, BIP, BIL} imageOrder;
     enum imageTypeEnum encodeOrder;
     //
-    enum { FULL = 0, REDUCED } mode;
-    enum { SIGNED, UNSIGNED } pixelType;
+    enum { FULL = 0, REDUCED = 1 } mode;
+    enum { UNSIGNED = 0, SIGNED = 1 } pixelType;
     int precedingBands;
     // User parameters
     unsigned char dynamicRange; // D register
     unsigned char registerSize; // R register
-    // Sample represantation
-    int theta;
     // Weight parameters
     unsigned char weightResolution;
     int weightInterval;
@@ -30,7 +28,6 @@ struct arguments {
     unsigned int initialK;
     unsigned int uMax;
     // Hybrid encoder specific
-    uint64_t initialAccumulator;
     unsigned int wordSize;
     //
     int32_t  sMin;

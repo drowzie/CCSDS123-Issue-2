@@ -62,16 +62,16 @@ int main(int argc, char **argv) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
 					residuals[offset(x,y,z,&parameters)] = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
 					0, 0, 0, 0, 0);
-					//fwrite((&tempRes), 4, 1, deltafile);
+					fwrite((&residuals[offset(x,y,z,&parameters)]), 4, 1, deltafile);
 
-					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
+/* 					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
 					0, 0, 0, 0, 0);
 
 					if(sample[offset(x,y,z,&parameters)] != decompressedSamples[offset(x,y,z,&parameters)]) {
 						printf("x:%d, y %d \n",x,y);
 						printf("Sample %d vs unpredicted %d \n", sample[offset(x,y,z,&parameters)], decompressedSamples[offset(x,y,z,&parameters)]);
 						
-					} 
+					}  */
 					//Currently only BSQ encoding mode
 					//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 					//encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
