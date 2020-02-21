@@ -9,7 +9,7 @@
     Requires the whole Image to be processed by decoder beforehand.
 */
 
-uint32_t unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
+uint32_t unPredict(uint32_t residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
 int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent) {
 	/*
 		Calculate local sum and build up the diffrential vector at a given sample.
@@ -27,7 +27,7 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	/* 
 		Decompress
 	*/
-	int32_t quantizerIndex = inverseMappedResidual(residuals[offset(x,y,z,parameters)], predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
+	int32_t quantizerIndex = inverseMappedResidual(residuals, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 	int32_t delta = deQuantizizer(quantizerIndex, maximumError, x, y);
 	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
 

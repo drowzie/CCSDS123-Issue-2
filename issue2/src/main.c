@@ -36,73 +36,87 @@ int main(int argc, char **argv) {
 		Mallocs for decompression
 	*/
 	uint32_t * decompressedSamples = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
-	uint32_t * residuals = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint32_t));
-	int32_t * decompressionWeights = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(int32_t ));
-	int32_t * decompressionDiffVector = malloc((parameters.mode != REDUCED ? parameters.precedingBands+3 : parameters.precedingBands) * sizeof(int32_t ));
 
-	FILE * residuals_file = fopen("Encoded.bin", "w+b");
-	FILE * deltafile = fopen("Encoded.bin.delta", "w+b");
-
+	/* 
+		Files to open for writing/reading
+	 */
+	FILE * residuals_file = NULL;
+	FILE * deltafile = NULL;
+	if (parameters.debugMode)
+	{
+		deltafile = fopen("Encoded.bin.delta", "wb");
+	}
+	FILE * decompressedFile = NULL;
+	if(parameters.compressionMode == DECOMPRESS) {
+		decompressedFile = fopen("DecompressedFile", "wb");
+		residuals_file = fopen("Encoded.bin", "rb"); // Uncertain if rb/wb changes anything, but it seems to fix the problem from creating a new file.
+	} else {
+		residuals_file = fopen("Encoded.bin", "wb");
+	}
+	// Read from file into sample
+	if(parameters.compressionMode == COMPRESS) {
+		readIntSamples(&parameters, parameters.fileName, sample);
+	}
+	printf("Computing \n");
+	/* 
+		Begin Compression
+	 */
 	unsigned int numWrittenBits = 0;
 	unsigned int totalWrittenBytes = 0;
-	readIntSamples(&parameters, parameters.fileName, sample);
-	/* 
-		Hybrid Encoder Related Init Functions
-	*/
-	//hashFlushCodes();
-	//hashCodeTableValues();
-
-	printf("Computing \n");
 	start = walltime();
-	printf("Encode order: %d Offset order: %d \n", parameters.encodeOrder, parameters.imageOrder);
-	if(parameters.encodeOrder == BSQ) {
-		//#pragma omp parallel for num_threads(16)
-		for (uint16_t z = 0; z < parameters.zSize; z++) {
+	if (parameters.compressionMode == COMPRESS) {
+		if(parameters.encodeOrder == BSQ) {
+			for (uint16_t z = 0; z < parameters.zSize; z++) {
+				for (uint16_t y = 0; y < parameters.ySize; y++) {
+					for (uint16_t x = 0; x < parameters.xSize; x++) {
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
+						0, 0, 0, 0, 0);
+						if(parameters.debugMode) {
+							fwrite(&tempResidual, 4, 1, deltafile);
+						}
+						//Currently only BSQ encoding mode
+						encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+					}
+				}
+			}
+		} 
+		else if (parameters.encodeOrder == BIP) {
 			for (uint16_t y = 0; y < parameters.ySize; y++) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
-					residuals[offset(x,y,z,&parameters)] = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
-					0, 0, 0, 0, 0);
-					fwrite((&residuals[offset(x,y,z,&parameters)]), 4, 1, deltafile);
-
-/* 					decompressedSamples[offset(x,y,z,&parameters)] = unPredict(residuals, decompressedSamples, x, y, z, &parameters, decompressionDiffVector, decompressionWeights,
-					0, 0, 0, 0, 0);
-
-					if(sample[offset(x,y,z,&parameters)] != decompressedSamples[offset(x,y,z,&parameters)]) {
-						printf("x:%d, y %d \n",x,y);
-						printf("Sample %d vs unpredicted %d \n", sample[offset(x,y,z,&parameters)], decompressedSamples[offset(x,y,z,&parameters)]);
-						
-					}  */
-					//Currently only BSQ encoding mode
-					//encodeSampleAdaptive(residuals[offset(x,y,z,&parameters)], counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
-					//encodeHybrid(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+					for (uint16_t z = 0; z < parameters.zSize; z++) {
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
+						// Currently only BSQ encoding mode
+						fwrite((&tempResidual), 4, 1, deltafile);
+						encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+					}
 				}
 			}
-			//encodeFinalStage(accumulator, z,  &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
-		}
-	} 
-	else if (parameters.encodeOrder == BIP) {
-		for (uint16_t y = 0; y < parameters.ySize; y++) {
-			for (uint16_t x = 0; x < parameters.xSize; x++) {
-				for (uint16_t z = 0; z < parameters.zSize; z++) {
-					uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
-					// Currently only BSQ encoding mode
-					fwrite((&tempResidual), 4, 1, deltafile);
-					encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+		} else if (parameters.encodeOrder == BIL) {
+			for (uint16_t y = 0; y < parameters.ySize; y++)	{
+				for (uint16_t z = 0; z < parameters.zSize; z++)	{
+					for (uint16_t x = 0; x < parameters.xSize; x++)	{
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
+						// Currently only BSQ encoding mode
+						fwrite((&tempResidual), 4, 1, deltafile);
+						encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+					}
 				}
 			}
 		}
-	} else if (parameters.encodeOrder == BIL) {
-		for (uint16_t y = 0; y < parameters.ySize; y++)	{
-			for (uint16_t z = 0; z < parameters.zSize; z++)	{
-				for (uint16_t x = 0; x < parameters.xSize; x++)	{
-					uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
-					// Currently only BSQ encoding mode
-					fwrite((&tempResidual), 4, 1, deltafile);
-					encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
+	} else {
+		if(parameters.encodeOrder == BSQ) {
+			for (uint16_t z = 0; z < parameters.zSize; z++) {
+				for (uint16_t y = 0; y < parameters.ySize; y++) {
+					for (uint16_t x = 0; x < parameters.xSize; x++) {
+						uint32_t tempResidual = decodeSampleAdaptive(counter, accumulator, x, y, z, residuals_file, &parameters);
+						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 0, 0, 0, 0, 0);
+						fwrite(&decompressedSamples[offset(x,y,z,&parameters)], 2, 1, decompressedFile);
+					}
 				}
 			}
-		}
+		} 
 	}
+
 	computeTime += walltime() - start;
 
 	printf("\n");
@@ -115,7 +129,9 @@ int main(int argc, char **argv) {
 	*/
 
 	fclose(residuals_file);
-	fclose(deltafile);
+	if(parameters.debugMode) {
+		fclose(deltafile);
+	}
 
 	// Free up stuff
 	free(accumulator);

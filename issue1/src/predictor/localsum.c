@@ -6,7 +6,7 @@
 	Chapter 4.4 in CCSDS 123 Issue 2
 */
 
-int32_t wideNeighborLocalSum(uint16_t * sample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
+inline int32_t wideNeighborLocalSum(uint16_t * sample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 	if (x+y != 0) {
 		if (y == 0 && x > 0){
 			return 4 * sample[offset(x-1,y,z, parameters)];

@@ -9,6 +9,7 @@ struct arguments {
     //
     enum { FULL = 0, REDUCED } mode;
     enum { SIGNED, UNSIGNED } pixelType;
+    enum { COMPRESS = 0, DECOMPRESS = 1} compressionMode;
     int precedingBands;
     // User parameters
     unsigned char dynamicRange; // D register

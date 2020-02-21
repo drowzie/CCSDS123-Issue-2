@@ -21,7 +21,7 @@ uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSa
 /* 
     Functions for decompression
 */
-uint32_t unPredict(uint32_t * residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
+uint32_t unPredict(uint32_t residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
     int32_t * diffVector, int32_t * weights, uint32_t maximumError, 
     uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent);
 

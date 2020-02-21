@@ -101,7 +101,6 @@ int main(int argc, char **argv) {
 	//Finally store the compressed image
 	fwrite(compressedImage, 1, totalWrittenBytes, residuals_file);
 
-
 	/* 
 		END OF COMPRESSION
 	*/

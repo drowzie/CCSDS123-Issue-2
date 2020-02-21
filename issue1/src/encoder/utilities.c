@@ -17,6 +17,7 @@ void writeBits(uint16_t writeBits, unsigned int numBits, unsigned int * numWritt
         storedValue |= ((writeBits >> i) & 0x1) << (7 - (*numWrittenBits));
         (*numWrittenBits)++;
         if(*numWrittenBits >= 8) {
+            // Inside here means a byte has been written. Can change to fwrite a byte or send it on network.
             compressedImage[*totalWrittenBytes] = storedValue;
             *numWrittenBits = 0;
             (*totalWrittenBytes)++;

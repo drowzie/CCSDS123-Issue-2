@@ -9,7 +9,7 @@ uint16_t predict(uint16_t * inputSample, uint16_t x, uint16_t y, uint16_t z, str
 	/*
 		Calculate local sum and build up the diffrential vector at a given sample.
 	*/
-	if(x+y!= 0) {
+	if(x+y != 0) {
 		BuildDiffVector(inputSample, diffVector, x, y, z, parameters, wideNeighborLocalSum);
 	}
 	/* 
@@ -66,7 +66,7 @@ uint32_t computeScaledPredicted(uint16_t * sample, int32_t * weightVector, int32
 		}
 	} else {
 		int32_t diffPredicted = innerProduct(weightVector, diffVector, z, parameters);
-		/// Fragile: Do not touch
+		/// Shifting of negative numbers can cause severe issues. Thus shifting of the absolute value and then make it negative.
 		int32_t tmpValue = localsum - (parameters->sMid << 2);
 		int sgn = tmpValue < 0;
 		tmpValue = abs(tmpValue) << parameters->weightResolution;

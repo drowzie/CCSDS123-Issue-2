@@ -2,6 +2,7 @@
 #include "cliparser/include/cli.h"
 #include <inttypes.h>
 
+#define clip(x, xmin, xmax) ((x) < (xmin) ? (xmin) : ((x) > (xmax) ? (xmax) : (x)))
 
 /* 
     Functions for prediction and parts of decompression
@@ -29,6 +30,6 @@ int32_t wideColumnLocalSum(uint16_t * sample,  uint16_t x, uint16_t y, uint16_t 
 
 // UTILS
 int offset(uint16_t x, uint16_t y, uint16_t z, struct arguments * args);
-int64_t clip(int64_t x, int64_t xmin, int64_t xmax);
 int64_t modR(int64_t x, int64_t R);
 int sgn(int64_t x);
+
