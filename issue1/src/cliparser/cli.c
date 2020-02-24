@@ -11,7 +11,6 @@ static char args_doc[] = "";
 
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, OPTION_ARG_OPTIONAL, "Calculate in Full Prediction Mode (DEFAULT=REDUCED)"},
-    { "debug", 777, 0, 0, "DEBUG MODE"},
     { "SIGNED", 788, 0, 0, "SIGNED PIXELS"},
     { "imageorder", 'o',  "ORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
     { "imageorder", 'O',  "ENCODEORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
@@ -26,7 +25,6 @@ static struct argp_option options[] = {
     { "xSize", 'x', "xSIZE", 0, "x size of image"},
     { "ySize", 'y', "ySIZE", 0, "y size of image"},
     { "zSize", 'z', "zSIZE", 0, "z size of image"},
-    { "inputFILE", 'i', "FILE", 0, "FILENAME"},
     { 0 } 
 };
 
@@ -41,8 +39,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'O': 
         arguments->encodeOrder = atoi(arg);
         break;
-    case 'i': arguments->fileName = arg; break;
-    case 777: arguments->debugMode = 1; break;
     case 788: arguments->pixelType = SIGNED; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
@@ -71,7 +67,6 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->weightMin = -1;
     arguments->weightMax = 3;
     arguments->weightInterval = 6;
-    arguments->debugMode = 0;
     // Encoder specifics
     arguments->uMax = 16;
     arguments->initialK = 5;

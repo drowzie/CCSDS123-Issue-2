@@ -3,7 +3,6 @@
 
 struct arguments {
     //NAME
-    char *fileName;
     enum imageTypeEnum {BSQ = 0, BIP, BIL} imageOrder;
     enum imageTypeEnum encodeOrder;
     //
@@ -33,8 +32,6 @@ struct arguments {
     int32_t  sMin;
     int32_t  sMax;
     int32_t  sMid;
-
-    int debugMode;
 };
 
 extern struct arguments parameters;
