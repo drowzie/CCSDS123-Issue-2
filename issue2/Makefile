@@ -8,9 +8,8 @@ csrc = $(wildcard src/*.c) \
 obj = $(csrc:.c=.o)
 
 #NOTE: Main folder for every include is set to src 
-CFLAGS= -I./src/ -fopenmp
-LDFLAGS = -O3 -g -Wall -lm -fopenmp
-
+CFLAGS= -I./src/
+LDFLAGS = -O3 -g -Wall -lm
 main.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS) 
 .PHONY: clean

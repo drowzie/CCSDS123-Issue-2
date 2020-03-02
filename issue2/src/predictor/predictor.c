@@ -12,8 +12,8 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	*/
 	int64_t highResSample = 0;
 	if(x+y != 0) {
-		BuildDiffVector(inputSample, diffVector, x, y, z, parameters, wideNeighborLocalSum);
-		highResSample = computeHighResPredSample(weights, diffVector, x, y, z, wideNeighborLocalSum(inputSample, x, y, z, parameters), parameters);
+		BuildDiffVector(sampleRep, diffVector, x, y, z, parameters, wideNeighborLocalSum);
+		highResSample = computeHighResPredSample(weights, diffVector, x, y, z, wideNeighborLocalSum(sampleRep, x, y, z, parameters), parameters);
 	}
 	/* 
 		Step for calculating prediction sample and doubleResPredSample
@@ -27,6 +27,7 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
 
 	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, sampleDamping, sampleOffset, x, y, z, parameters);
+	
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
 	} else {
@@ -34,13 +35,6 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
 	}
 	uint32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
-	int32_t inverse = inverseMappedResidual(residual, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
-
-	if(inverse != quantizerIndex) {
-		printf("Inverse: %d != Residual: %d \n", inverse, quantizerIndex);
-		exit(0);
-	}
-
 	return residual;
 }
 

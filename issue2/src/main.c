@@ -1,4 +1,3 @@
-#include <omp.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -42,8 +41,7 @@ int main(int argc, char **argv) {
 	 */
 	FILE * residuals_file = NULL;
 	FILE * deltafile = NULL;
-	if (parameters.debugMode)
-	{
+	if (parameters.debugMode){
 		deltafile = fopen("Encoded.bin.delta", "wb");
 	}
 	FILE * decompressedFile = NULL;
@@ -51,7 +49,7 @@ int main(int argc, char **argv) {
 		decompressedFile = fopen("DecompressedFile", "wb");
 		residuals_file = fopen("Encoded.bin", "rb"); // Uncertain if rb/wb changes anything, but it seems to fix the problem from creating a new file.
 	} else {
-		residuals_file = fopen("Encoded.bin", "wb");
+		residuals_file = fopen("Encoded.bin", "w+b");
 	}
 	// Read from file into sample
 	if(parameters.compressionMode == COMPRESS) {
@@ -69,8 +67,8 @@ int main(int argc, char **argv) {
 			for (uint16_t z = 0; z < parameters.zSize; z++) {
 				for (uint16_t y = 0; y < parameters.ySize; y++) {
 					for (uint16_t x = 0; x < parameters.xSize; x++) {
-						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 
-						0, 0, 0, 0, 0);
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights,
+						1<<10, 0, 0, 0, 0);
 						if(parameters.debugMode) {
 							fwrite(&tempResidual, 4, 1, deltafile);
 						}
@@ -109,14 +107,20 @@ int main(int argc, char **argv) {
 				for (uint16_t y = 0; y < parameters.ySize; y++) {
 					for (uint16_t x = 0; x < parameters.xSize; x++) {
 						uint32_t tempResidual = decodeSampleAdaptive(counter, accumulator, x, y, z, residuals_file, &parameters);
-						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 0, 0, 0, 0, 0);
-						fwrite(&decompressedSamples[offset(x,y,z,&parameters)], 2, 1, decompressedFile);
+						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 1<<10, 0, 0, 0, 0);
+						if(parameters.pixelType == SIGNED) {
+							int32_t signedSample = decompressedSamples[offset(x,y,z,&parameters)] - parameters.sMid;
+							fwrite(&signedSample, 2, 1, decompressedFile);
+						} else {
+							fwrite(&decompressedSamples[offset(x,y,z,&parameters)], 2, 1, decompressedFile);
+						}
 					}
 				}
 			}
 		} 
 	}
 
+	fillBits(&numWrittenBits, &totalWrittenBytes, &parameters, residuals_file);
 	computeTime += walltime() - start;
 
 	printf("\n");

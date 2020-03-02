@@ -78,3 +78,178 @@ void fillBits(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, s
 		writeBits(0, numPaddingbits, numWrittenBits, totalWrittenBytes, stream);
 	}
 }
+
+/* 
+    Header is structured according to chapter 5.3 in CCSDS 123 Issue 1
+*/
+void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, uint8_t * compressedImage, struct arguments * parameters) {
+    /* 
+        Image Metadata 
+    */
+
+    // User defined Data
+    writeBits(0x0, 8, numWrittenBits, totalWrittenBytes, compressedImage);
+    //X Y and Z Size
+    writeBits(parameters->xSize, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+    writeBits(parameters->ySize, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+    writeBits(parameters->zSize, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Sample type Unsigned=0 or Signed=1
+    writeBits(parameters->pixelType, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // reserved
+    writeBits(0x0, 2, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Dyn range
+    writeBits(parameters->dynamicRange, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    //Sample encoding order
+    if (parameters->encodeOrder != BSQ)
+    {
+        writeBits(0x1, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+        if (parameters->encodeOrder == BIP)
+        {
+            // BIP: Write zSize
+            writeBits(parameters->zSize, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+        } else {
+            //BIL: Write 1
+            writeBits(0x1, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+        }
+    } else {
+        writeBits(0x1, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+        writeBits(0x0, 16, numWrittenBits, totalWrittenBytes, compressedImage);
+    }
+    //Reserved
+    writeBits(0x0, 2, numWrittenBits, totalWrittenBytes, compressedImage);
+    //Ouput word size
+    writeBits(parameters->wordSize, 3, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Entropy coder type: For this issue it is always sample adaptive
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // All zeros: Reserved of size 10 bits
+    writeBits(0x0, 10, numWrittenBits, totalWrittenBytes, compressedImage);
+    /* 
+        PREDICTOR METADATA
+    */
+    // Reserved
+    writeBits(0x0, 2, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Num Prediction Bands
+    writeBits(parameters->precedingBands, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Prediction mode
+    writeBits(parameters->mode, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Reserved
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Local sum type: Locked to neighor oriented local sum -> 0
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Reserved
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Register size
+    writeBits(parameters->registerSize, 6, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Weight component resolution
+    writeBits(parameters->weightResolution-4, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    //Weight update scaling exponent
+    writeBits(parameters->weightInterval-4, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    //Weight update scaling initial parameter
+    writeBits(parameters->weightMin+6, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Weight update scaling final parameter
+    writeBits(parameters->weightMax+6, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    //Reserved
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Weight init method: Always defualt -> 0
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Weight init table flag: Alaways none -> 0
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Weight init resolution: Disabled -> 5 zeros
+    writeBits(0x0, 5, numWrittenBits, totalWrittenBytes, compressedImage);
+
+    /* 
+        Entropy encoder metadata: For sample adaptive
+    */
+    // Unary lenght limit
+    writeBits(parameters->uMax, 5, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Rescaling counter size
+    writeBits(parameters->yStar-4, 3, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Initial count exponent
+    writeBits(parameters->initialY, 3, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Accumulator init
+    writeBits(parameters->initialK, 4, numWrittenBits, totalWrittenBytes, compressedImage);
+    // Accumulator init flag -> always 0
+    writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+}
+
+/* 
+    Header is structured according to chapter 5.3 in CCSDS 123 Issue 1
+*/
+void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
+    /* IMAGE METADATA */
+    parameters->xSize = readBits(16, compressedImage);
+    parameters->ySize = readBits(16, compressedImage);
+    parameters->zSize = readBits(16, compressedImage);
+    /* Signed type */
+    parameters->pixelType = readBits(1, compressedImage);
+    //RESERVED
+    readBits(2, compressedImage);
+    // DYN RANGE
+    parameters->dynamicRange = readBits(4, compressedImage);
+    // Encode order
+    readBits(1, compressedImage);
+    uint16_t encodeOrder = readBits(16, compressedImage);
+    if (encodeOrder == parameters->zSize) {
+        parameters->encodeOrder == BIP;
+    } else if (encodeOrder = 0x1) {
+        parameters->encodeOrder == BIL;
+    } else {
+        parameters->encodeOrder == BSQ;
+    }
+    // RESERVED
+    readBits(2, compressedImage);
+    // Word size
+    parameters->wordSize = readBits(3, compressedImage);
+    // Coder type -- Locked to sample adaptive
+    readBits(1, compressedImage);
+    // Reserved
+    readBits(10, compressedImage);
+    /* Prediction metadata */
+    // Reserved
+    readBits(2, compressedImage);
+    // Preceding bands
+    parameters->precedingBands = readBits(4, compressedImage);
+    // Mode
+    parameters->mode = readBits(1, compressedImage);
+    // Reserved
+    readBits(1, compressedImage);
+    // Local sum mode, locked to neighbor
+    readBits(1, compressedImage);
+    // Reserved
+    readBits(1, compressedImage);
+    // Register size
+    parameters->registerSize = readBits(6, compressedImage);
+    // WeightResolution
+    parameters->weightResolution = readBits(4, compressedImage) + 4;
+    // Weight Interval
+    parameters->weightInterval = readBits(4, compressedImage) + 4;
+    // Weight min
+    parameters->weightMin = readBits(4, compressedImage) + 6;
+    // Weight max
+    parameters->weightMax = readBits(4, compressedImage) + 6;
+    // Reserved
+    readBits(1, compressedImage);
+
+    // Custom weight init is disabled for this implementation
+    // Weight init method
+    readBits(1, compressedImage);
+    // Weight init table
+    readBits(1, compressedImage);
+    // Weight init resolution 
+    readBits(5, compressedImage);
+
+
+    /* 
+        Entropy encoder metadata: For sample adaptive
+    */
+
+    parameters->uMax = readBits(5, compressedImage);
+    // Y star
+    parameters->yStar = readBits(3, compressedImage) + 4;
+    // Initial y
+    parameters->initialY = readBits(3, compressedImage);
+    // Init k
+    parameters->initialK = readBits(4, compressedImage);
+    // Acc init flag
+    readBits(1, compressedImage);
+}
