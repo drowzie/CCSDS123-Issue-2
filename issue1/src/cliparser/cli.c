@@ -1,4 +1,4 @@
-#include "include/cli.h"
+#include "cli.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <argp.h>
@@ -55,10 +55,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 
 void parseArguments(int argc, char **argv, struct arguments * arguments) {
-    // Image sizes, defaults to test pattern
-    arguments->xSize = 4;
-    arguments->ySize = 4;
-    arguments->zSize = 2;
     // Prediction specific
 	arguments->mode = REDUCED;
     arguments->dynamicRange = 16;
@@ -71,7 +67,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->uMax = 16;
     arguments->initialK = 5;
     arguments->initialY = 1;
-    arguments->wordSize = sizeof(int); // The computer word size
+    arguments->wordSize = 4; // The computer word size
     arguments->sMin = 0;
     arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
     arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
@@ -81,7 +77,6 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     argp_parse(&argp, argc, argv, 0, 0, arguments);
     // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
     arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
-    //arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
     arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
     if(arguments->yStar > 9) {
         arguments->yStar = 9;

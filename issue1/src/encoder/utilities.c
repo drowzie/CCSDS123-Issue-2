@@ -1,5 +1,5 @@
-#include "include/encoder.h"
-#include "cliparser/include/cli.h"
+#include "encoder.h"
+#include "cliparser/cli.h"
 #include <stdio.h>
 /*
     Extract the least significant k bits from number.

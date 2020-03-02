@@ -1,9 +1,9 @@
-#include "include/utilities.h"
-#include "cliparser/include/cli.h"
+#include "utilities.h"
+#include "cliparser/cli.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include "predictor/include/predictor.h"
+#include "predictor/predictor.h"
 
 /* 
     Read Integer samples into memory

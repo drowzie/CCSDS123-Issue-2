@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include "cliparser/include/cli.h"
-#include "include/compressor.h"
-#include "utils/include/utilities.h"
+#include "cliparser/cli.h"
+#include "compressor.h"
+#include "utils/utilities.h"
 #include <sys/time.h>
 
 int main(int argc, char **argv) {
@@ -24,9 +24,8 @@ int main(int argc, char **argv) {
 	//Output compressed image 
 	uint8_t * compressedImage = malloc(((parameters.dynamicRange + 7)/8)*parameters.xSize*parameters.ySize*parameters.zSize);
 	//Files to write 
-	FILE * deltafile = NULL;
 	FILE * residuals_file = fopen("Encoded.bin", "w+b");
-	readIntSamples(&parameters, "HICO_L2_1.BSQ", sample);
+	readIntSamples(&parameters, "../issue2/HICO_L1B_1.BSQ", sample);
 	/* --------------------
 		COMPRESSION
 	-----------------------*/

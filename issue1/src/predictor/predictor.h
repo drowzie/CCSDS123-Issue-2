@@ -1,5 +1,5 @@
 #pragma once
-#include "cliparser/include/cli.h"
+#include "cliparser/cli.h"
 #include <inttypes.h>
 
 #define clip(x, xmin, xmax) ((x) < (xmin) ? (xmin) : ((x) > (xmax) ? (xmax) : (x)))

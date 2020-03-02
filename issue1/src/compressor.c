@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include "cliparser/include/cli.h"
-#include "predictor/include/predictor.h"
-#include "encoder/include/encoder.h"
-#include "utils/include/utilities.h"
+#include "cliparser/cli.h"
+#include "predictor/predictor.h"
+#include "encoder/encoder.h"
+#include "utils/utilities.h"
 
 /* 
     Compresses the image by the CCSDS 123 Issue 1 standard.

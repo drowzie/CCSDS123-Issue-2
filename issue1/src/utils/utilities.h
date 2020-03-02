@@ -1,5 +1,5 @@
 #pragma once
-#include "../../cliparser/include/cli.h"
+#include "cliparser/cli.h"
 #include <stdio.h>
 int readIntSamples(struct arguments * parameters, char fileName[128], uint16_t * samples);
 void printArrayLong(unsigned long * sample, struct arguments * args);

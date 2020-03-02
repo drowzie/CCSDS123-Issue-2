@@ -1,5 +1,5 @@
-#include "include/predictor.h"
-#include "cliparser/include/cli.h"
+#include "predictor.h"
+#include "cliparser/cli.h"
 #include <stdio.h>
 #include <stdlib.h>
 

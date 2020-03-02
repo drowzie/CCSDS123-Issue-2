@@ -1,6 +1,6 @@
 #pragma once
 #include <stdio.h>
-#include "cliparser/include/cli.h"
+#include "cliparser/cli.h"
 
 int encodeSampleAdaptive(uint32_t sampleToEncode, uint16_t * counter, uint64_t * accumulator, uint16_t x, uint16_t y, uint16_t z, unsigned int * totalWrittenBytes, unsigned int * numWrittenBits, uint8_t * compressedImage, struct arguments * parameters);
 
