@@ -82,7 +82,8 @@ void fillBits(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, s
 /* 
     Header is structured according to chapter 5.3 in CCSDS 123 Issue 1
 */
-void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, uint8_t * compressedImage, struct arguments * parameters) {
+
+void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, FILE * compressedImage, struct arguments * parameters) {
     /* 
         Image Metadata 
     */
@@ -176,6 +177,8 @@ void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWritten
     Header is structured according to chapter 5.3 in CCSDS 123 Issue 1
 */
 void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
+    // User defined data
+    readBits(8, compressedImage);
     /* IMAGE METADATA */
     parameters->xSize = readBits(16, compressedImage);
     parameters->ySize = readBits(16, compressedImage);
@@ -186,15 +189,21 @@ void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
     readBits(2, compressedImage);
     // DYN RANGE
     parameters->dynamicRange = readBits(4, compressedImage);
+    if(parameters->dynamicRange == 0) {
+        parameters->dynamicRange = 16;
+    }
     // Encode order
     readBits(1, compressedImage);
     uint16_t encodeOrder = readBits(16, compressedImage);
     if (encodeOrder == parameters->zSize) {
-        parameters->encodeOrder == BIP;
-    } else if (encodeOrder = 0x1) {
-        parameters->encodeOrder == BIL;
+        parameters->encodeOrder = BIP;
+        parameters->imageOrder = BIP;
+    } else if (encodeOrder == 0x1) {
+        parameters->encodeOrder = BIL;
+        parameters->imageOrder = BIL;
     } else {
-        parameters->encodeOrder == BSQ;
+        parameters->encodeOrder = BSQ;
+        parameters->imageOrder = BSQ;
     }
     // RESERVED
     readBits(2, compressedImage);
@@ -224,12 +233,11 @@ void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
     // Weight Interval
     parameters->weightInterval = readBits(4, compressedImage) + 4;
     // Weight min
-    parameters->weightMin = readBits(4, compressedImage) + 6;
+    parameters->weightMin = readBits(4, compressedImage) - 6;
     // Weight max
-    parameters->weightMax = readBits(4, compressedImage) + 6;
+    parameters->weightMax = readBits(4, compressedImage) - 6;
     // Reserved
     readBits(1, compressedImage);
-
     // Custom weight init is disabled for this implementation
     // Weight init method
     readBits(1, compressedImage);
@@ -237,12 +245,9 @@ void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
     readBits(1, compressedImage);
     // Weight init resolution 
     readBits(5, compressedImage);
-
-
     /* 
         Entropy encoder metadata: For sample adaptive
     */
-
     parameters->uMax = readBits(5, compressedImage);
     // Y star
     parameters->yStar = readBits(3, compressedImage) + 4;
@@ -252,4 +257,8 @@ void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
     parameters->initialK = readBits(4, compressedImage);
     // Acc init flag
     readBits(1, compressedImage);
+    // Parameters defined by what is read in the file
+    parameters->sMin = 0;
+    parameters->sMax = (0x1 << parameters->dynamicRange) - 1;
+    parameters->sMid = 0x1 << (parameters->dynamicRange - 1);
 }

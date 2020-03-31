@@ -26,6 +26,8 @@ codeWord *searchFlushHash(char * searchString, int table);
 void fillBits(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, struct arguments * parameters, FILE * stream);
 void writeBits(uint64_t writeBits, unsigned int numBits, unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, FILE * stream);
 long extractBits(long number, int k);
+void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWrittenBytes, FILE * compressedImage, struct arguments * parameters);
+void readImageHeader(FILE * compressedImage, struct arguments * parameters);
 
 // For decoder
 uint32_t decodeSampleAdaptive(uint16_t * counter, uint64_t * accumulator, uint16_t x, uint16_t y, uint16_t z, FILE * compressedImage, struct arguments * parameters);

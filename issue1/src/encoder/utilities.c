@@ -41,7 +41,6 @@ void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWritten
     /* 
         Image Metadata 
     */
-
     // User defined Data
     writeBits(0x0, 8, numWrittenBits, totalWrittenBytes, compressedImage);
     //X Y and Z Size

@@ -28,6 +28,11 @@ static struct argp_option options[] = {
     { "ySize", 'y', "ySIZE", 0, "y size of image"},
     { "zSize", 'z', "zSIZE", 0, "z size of image"},
     { "inputFILE", 'i', "FILE", 0, "FILENAME"},
+    { "Theta", 'T', "theta", 0, "Lossy compression parameter"},
+    { "MaximumError", 'm', "error", 0, "Lossy compression parameter"},
+    { "interbandoffset", 'B', "interbandOffset", 0, "Lossy compression parameter"},
+    { "sampleOffset", 'S', "sampleOffset", 0, "Lossy compression parameter"},
+    { "interexponent", 'E', "interbandExponent", 0, "Lossy compression parameter"},
     { 0 } 
 };
 
@@ -52,6 +57,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'x': arguments->xSize = atoi(arg); break;
     case 'y': arguments->ySize = atoi(arg); break;
     case 'z': arguments->zSize = atoi(arg); break;
+    case 'T': arguments->theta = atoi(arg); break;
+    case 'm': arguments->maximumError = atoi(arg); break;
+    case 'B': arguments->interbandOffset = atoi(arg); break;
+    case 'S': arguments->sampleOffset = atoi(arg); break;
+    case 'E': arguments->intrabandExponent = atoi(arg); break;
     case ARGP_KEY_ARG: return 0;
     default: return ARGP_ERR_UNKNOWN;
     }   
@@ -59,6 +69,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 }
 
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
+
+/* 
+    This function will init all values to a default value
+ */
 
 void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->compressionMode = COMPRESS;
@@ -71,11 +85,17 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->dynamicRange = 16;
 	arguments->precedingBands = 15;
     arguments->weightResolution = 13;
-    arguments->theta = 0;
     arguments->weightMin = -1;
     arguments->weightMax = 3;
     arguments->weightInterval = 6;
     arguments->debugMode = 0;
+    // Lossy copmression parameters
+    arguments->theta = 0;
+    arguments->maximumError = 0;
+    arguments->interbandOffset = 0;
+    arguments->sampleOffset = 0;
+    arguments->sampleDamping = 0;
+    arguments->intrabandExponent = 0;
     // Encoder specifics
     arguments->uMax = 16;
     arguments->initialK = 5;
@@ -85,14 +105,11 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
     arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
     arguments->pixelType = UNSIGNED;
-    arguments->imageOrder = BSQ;
-    arguments->encodeOrder = BSQ;
+    arguments->imageOrder = BIP;
+    arguments->encodeOrder = BIP;
     // Hybrid Encoder
     arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);
-    // Constraint defauluts based on previous arguments, this is limitations from the CCSDS 123 Blue book.
-    arguments->precedingBands = arguments->zSize > arguments->precedingBands ? arguments->precedingBands : arguments->zSize;
-    //arguments->precedingBands = arguments->precedingBands > 15 ? 15 : arguments->precedingBands < 0 ? 0 : arguments->precedingBands;
     arguments->registerSize = 32 > (arguments->dynamicRange+arguments->weightResolution + 2) ? 32 : (arguments->dynamicRange+arguments->weightResolution + 2);
     if(arguments->yStar > 9) {
         arguments->yStar = 9;

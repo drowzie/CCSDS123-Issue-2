@@ -29,7 +29,7 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	*/
 	int32_t quantizerIndex = inverseMappedResidual(residuals, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 	int32_t delta = deQuantizizer(quantizerIndex, maximumError, x, y);
-	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
+	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, parameters->maximumError, parameters);
 
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
