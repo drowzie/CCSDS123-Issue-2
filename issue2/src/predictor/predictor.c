@@ -6,7 +6,9 @@
 #include <math.h>
 
 uint32_t predict(uint32_t * inputSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, uint32_t * sampleRep, 
-int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent) {
+int32_t * diffVector, int32_t * weights) {
+
+	uint32_t maximumError = parameters->maximumError;
 	/* 
 		Calculate local sum and build up the diffrential vector at a given sample.
 	*/
@@ -26,13 +28,13 @@ int32_t * diffVector, int32_t * weights, uint32_t maximumError, uint32_t sampleD
 	int32_t quantizerIndex = quantization(inputSample, predictedSample, maximumError, x, y, z, parameters);
 	int32_t clippedBin = clippedBinCenter(predictedSample, quantizerIndex, maximumError, parameters);
 
-	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, sampleDamping, sampleOffset, x, y, z, parameters);
+	sampleRep[offset(x,y,z, parameters)] = sampleRepresentation(inputSample, clippedBin, predictedSample, quantizerIndex, maximumError, highResSample, x, y, z, parameters);
 	
 	if(x+y == 0) {
 		initWeights(weights, z, parameters);
 	} else {
 		int64_t doubleResError = (clippedBin << 1) - doubleResPredSample;
-		updateWeightVector(weights, diffVector, doubleResError, x, y, z, interbandOffset, intrabandExponent, parameters);
+		updateWeightVector(weights, diffVector, doubleResError, x, y, z, parameters);
 	}
 	uint32_t residual = computeMappedQuantizerIndex(quantizerIndex, predictedSample, doubleResPredSample, maximumError, x, y, z, parameters);
 	return residual;
@@ -92,13 +94,13 @@ int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint3
 	return clip(predictedSample + (quantizedSample*((maximumError << 1) + 1)), parameters->sMin, parameters->sMax);
 }
 
-uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, int sampleDamping, int sampleOffset, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
+uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
     if( x == 0 && y == 0) {
         return sample[offset(x,y,z,parameters)];
     } else {
         int64_t doubleResSample = 0;
-        doubleResSample = ( 4 * ((0x1 << parameters->theta) - sampleDamping)) * ((clippedBinCenter << parameters->weightResolution) - ((sgn(quantizedSample) * maximumError * sampleOffset) << (parameters->weightResolution - parameters->theta)));
-        doubleResSample += ((sampleDamping * highResPredSample) - (sampleDamping << (parameters->weightResolution + 1)));
+        doubleResSample = ( 4 * ((0x1 << parameters->theta) - parameters->sampleDamping)) * ((clippedBinCenter << parameters->weightResolution) - ((sgn(quantizedSample) * maximumError * parameters->sampleOffset) << (parameters->weightResolution - parameters->theta)));
+        doubleResSample += ((parameters->sampleDamping * highResPredSample) - (parameters->sampleDamping << (parameters->weightResolution + 1)));
         doubleResSample = doubleResSample >> (parameters->weightResolution + parameters->theta + 1);
 		doubleResSample = (doubleResSample + 1) >> 1;
         return (uint32_t)doubleResSample;

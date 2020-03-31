@@ -105,8 +105,8 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->sMax = (0x1 << arguments->dynamicRange) - 1;
     arguments->sMid = 0x1 << (arguments->dynamicRange - 1);
     arguments->pixelType = UNSIGNED;
-    arguments->imageOrder = BIP;
-    arguments->encodeOrder = BIP;
+    arguments->imageOrder = BSQ;
+    arguments->encodeOrder = BSQ;
     // Hybrid Encoder
     arguments->initialAccumulator = 1<<6;
     argp_parse(&argp, argc, argv, 0, 0, arguments);

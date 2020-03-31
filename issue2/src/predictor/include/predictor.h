@@ -7,14 +7,13 @@
     Functions for prediction and parts of decompression
 */
 uint32_t predict(uint32_t * inputSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, uint32_t * sampleRep,  
-    int32_t * diffVector, int32_t * weights, uint32_t maximumError, 
-    uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent);
+    int32_t * diffVector, int32_t * weights);
 
 int64_t computeHighResPredSample( int32_t * weightVector, int32_t * diffVector, uint16_t x, uint16_t y, uint16_t z, int32_t localsum, struct arguments * parameters);
 int32_t innerProduct(int32_t * weightVector, int32_t * diffVector, uint16_t z, struct arguments * parameters);
 int64_t computePredictedSample(uint32_t * sample, int64_t * doubleResPredSample,  int64_t highResPredSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 int32_t clippedBinCenter(int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, struct arguments * parameters);
-uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, int sampleDamping, int sampleOffset, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
+uint32_t sampleRepresentation(uint32_t * sample, int32_t clippedBinCenter, int32_t predictedSample, int32_t quantizedSample, uint32_t maximumError, int64_t highResPredSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 int32_t quantization(uint32_t * sample, int64_t predictedSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 
@@ -22,8 +21,7 @@ uint32_t computeMappedQuantizerIndex(int32_t quantizerIndex, int64_t predictedSa
     Functions for decompression
 */
 uint32_t unPredict(uint32_t residuals, uint32_t * samples, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, 
-    int32_t * diffVector, int32_t * weights, uint32_t maximumError, 
-    uint32_t sampleDamping, uint32_t sampleOffset, uint32_t interbandOffset, int32_t intrabandExponent);
+    int32_t * diffVector, int32_t * weights);
 
 int32_t inverseMappedResidual(uint32_t  mappedResidual, int64_t predictedSample, int64_t doubleResPredSample, uint32_t maximumError,
     uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
@@ -39,7 +37,7 @@ void BuildDiffVector(uint32_t * sample,  int32_t * diffVector, uint16_t x, uint1
 
 //WEIGHTS
 void initWeights(int32_t * weights, uint16_t z, struct arguments * parameters);
-void updateWeightVector(int32_t * weights, int32_t * diffVector, int64_t error, uint16_t x, uint16_t y, uint16_t z, int interbandOffset, int intrabandExponent, struct arguments * parameters);
+void updateWeightVector(int32_t * weights, int32_t * diffVector, int64_t error, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 
 // Local Sum Chapter 4.4
 int32_t wideNeighborLocalSum(uint32_t * sample,  uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);

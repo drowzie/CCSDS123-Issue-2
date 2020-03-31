@@ -67,8 +67,7 @@ int main(int argc, char **argv) {
 			for (uint16_t z = 0; z < parameters.zSize; z++) {
 				for (uint16_t y = 0; y < parameters.ySize; y++) {
 					for (uint16_t x = 0; x < parameters.xSize; x++) {
-						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights,
-						0, 0, 0, 0, 0);
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights);
 						if(parameters.debugMode) {
 							fwrite(&tempResidual, 4, 1, deltafile);
 						}
@@ -82,29 +81,31 @@ int main(int argc, char **argv) {
 			for (uint16_t y = 0; y < parameters.ySize; y++) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
 					for (uint16_t z = 0; z < parameters.zSize; z++) {
-						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights);
 						// Currently only BSQ encoding mode
 						encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 					}
 				}
 			}
+			fillBits(&numWrittenBits, &totalWrittenBytes, &parameters, residuals_file);
 		} else if (parameters.encodeOrder == BIL) {
 			for (uint16_t y = 0; y < parameters.ySize; y++)	{
 				for (uint16_t z = 0; z < parameters.zSize; z++)	{
 					for (uint16_t x = 0; x < parameters.xSize; x++)	{
-						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights, 0, 0, 0, 0, 0);
+						uint32_t tempResidual = predict(sample, x, y, z, &parameters, sampleRep, diffVector, weights);
 						encodeSampleAdaptive(tempResidual, counter, accumulator, x, y, z, &totalWrittenBytes, &numWrittenBits, residuals_file, &parameters);
 					}
 				}
 			}
 		}
+		fillBits(&numWrittenBits, &totalWrittenBytes, &parameters, residuals_file);
 	} else {
 		if(parameters.encodeOrder == BSQ) {
 			for (uint16_t z = 0; z < parameters.zSize; z++) {
 				for (uint16_t y = 0; y < parameters.ySize; y++) {
 					for (uint16_t x = 0; x < parameters.xSize; x++) {
 						uint32_t tempResidual = decodeSampleAdaptive(counter, accumulator, x, y, z, residuals_file, &parameters);
-						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 0, 0, 0, 0, 0);
+						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights);
 						if(parameters.pixelType == SIGNED) {
 							int32_t signedSample = decompressedSamples[offset(x,y,z,&parameters)] - parameters.sMid;
 							fwrite(&signedSample, 2, 1, decompressedFile);
@@ -119,7 +120,7 @@ int main(int argc, char **argv) {
 				for (uint16_t x = 0; x < parameters.xSize; x++) {
 					for (uint16_t z = 0; z < parameters.zSize; z++) {
 						uint32_t tempResidual = decodeSampleAdaptive(counter, accumulator, x, y, z, residuals_file, &parameters);
-						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 0, 0, 0, 0, 0);
+						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights);
 						if(parameters.pixelType == SIGNED) {
 							int32_t signedSample = decompressedSamples[offset(x,y,z,&parameters)] - parameters.sMid;
 							fwrite(&signedSample, 2, 1, decompressedFile);
@@ -134,7 +135,7 @@ int main(int argc, char **argv) {
 				for (uint16_t z = 0; z < parameters.zSize; z++)	{
 					for (uint16_t x = 0; x < parameters.xSize; x++)	{
 						uint32_t tempResidual = decodeSampleAdaptive(counter, accumulator, x, y, z, residuals_file, &parameters);
-						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights, 0, 0, 0, 0, 0);
+						decompressedSamples[offset(x,y,z,&parameters)] = unPredict(tempResidual, decompressedSamples, x, y, z, &parameters, diffVector, weights);
 						if(parameters.pixelType == SIGNED) {
 							int32_t signedSample = decompressedSamples[offset(x,y,z,&parameters)] - parameters.sMid;
 							fwrite(&signedSample, 2, 1, decompressedFile);
@@ -146,8 +147,6 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-
-	fillBits(&numWrittenBits, &totalWrittenBytes, &parameters, residuals_file);
 	computeTime += walltime() - start;
 
 	printf("\n");
