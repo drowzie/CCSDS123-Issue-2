@@ -11,6 +11,7 @@ static char args_doc[] = "";
 
 static struct argp_option options[] = { 
     { "Full Prediction Mode", 'f', 0, OPTION_ARG_OPTIONAL, "Calculate in Full Prediction Mode (DEFAULT=REDUCED)"},
+    { "DECOMPRESSION", 778, 0, 0, "DECOMPRESSION MODE. Input image is the compressed image"},
     { "SIGNED", 788, 0, 0, "SIGNED PIXELS"},
     { "imageorder", 'o',  "ORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
     { "imageorder", 'O',  "ENCODEORDER", 0 , "0=BSQ, 1=BIP or 2=BIL"},
@@ -40,6 +41,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         arguments->encodeOrder = atoi(arg);
         break;
     case 788: arguments->pixelType = SIGNED; break;
+    case 778: arguments->compressionMode = DECOMPRESS; break;
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
 	case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 15 ? 15 : atoi(arg)  ; break;

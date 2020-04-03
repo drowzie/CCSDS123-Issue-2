@@ -8,6 +8,52 @@ long extractBits(long number, int k) {
     return (((1 << k) - 1) & (number)); 
 }
 
+uint8_t buffer = 0; // Active buffer
+uint16_t bufferLen = 0; // Numer of bits in the buffer
+
+uint16_t readNZeros(uint16_t maxBits, FILE * compressedImage) {
+    uint16_t count = 0;
+    while (count < maxBits) {
+        if(bufferLen == 0) {
+            fread(&buffer, 1, 1, compressedImage);
+            bufferLen = 8;
+        }
+        bufferLen = bufferLen - 1;
+        if((buffer & 0x80) != 0) {
+            buffer = buffer << 1;
+            return count;
+        } else {
+            buffer = buffer << 1;
+            count++;
+        }
+    }
+    return maxBits + 1;
+}
+
+/* 
+    Read numBits from a file
+ */
+uint16_t readBits(unsigned int numBits, FILE * compressedImage) {
+    uint32_t readValue = 0;
+    uint32_t bitsToRead = numBits;
+    /* 
+        If we want to read more bits than what is already stored inside buffer.
+     */
+    while (bitsToRead > bufferLen) {
+        readValue = (readValue << bufferLen) | ((buffer) >> (8 - bufferLen)); // 
+        bitsToRead -= bufferLen; 
+        fread(&buffer, 1, 1, compressedImage);
+        bufferLen = 8; // Read 8 bits from storage
+    }
+
+    if(bitsToRead > 0) {
+        readValue = (readValue << bitsToRead) | (buffer >> (8-bitsToRead));
+        buffer = buffer << bitsToRead;
+        bufferLen = bufferLen - bitsToRead;
+    }
+    return readValue;
+}
+
 unsigned char storedValue = 0;
 /*
     write #numBits of writeBits into the file stream. numWrittenBits and storedValue 
@@ -124,4 +170,94 @@ void writeImageHeader(unsigned int * numWrittenBits, unsigned int * totalWritten
     writeBits(parameters->initialK, 4, numWrittenBits, totalWrittenBytes, compressedImage);
     // Accumulator init flag -> always 0
     writeBits(0x0, 1, numWrittenBits, totalWrittenBytes, compressedImage);
+}
+
+/* 
+    Header is structured according to chapter 5.3 in CCSDS 123 Issue 1
+*/
+void readImageHeader(FILE * compressedImage, struct arguments * parameters) {
+    // User defined data
+    readBits(8, compressedImage);
+    /* IMAGE METADATA */
+    parameters->xSize = readBits(16, compressedImage);
+    parameters->ySize = readBits(16, compressedImage);
+    parameters->zSize = readBits(16, compressedImage);
+    /* Signed type */
+    parameters->pixelType = readBits(1, compressedImage);
+    //RESERVED
+    readBits(2, compressedImage);
+    // DYN RANGE
+    parameters->dynamicRange = readBits(4, compressedImage);
+    if(parameters->dynamicRange == 0) {
+        parameters->dynamicRange = 16;
+    }
+    // Encode order
+    readBits(1, compressedImage);
+    uint16_t encodeOrder = readBits(16, compressedImage);
+    if (encodeOrder == parameters->zSize) {
+        parameters->encodeOrder = BIP;
+        parameters->imageOrder = BIP;
+    } else if (encodeOrder == 0x1) {
+        parameters->encodeOrder = BIL;
+        parameters->imageOrder = BIL;
+    } else {
+        parameters->encodeOrder = BSQ;
+        parameters->imageOrder = BSQ;
+    }
+    // RESERVED
+    readBits(2, compressedImage);
+    // Word size
+    parameters->wordSize = readBits(3, compressedImage);
+    // Coder type -- Locked to sample adaptive
+    readBits(1, compressedImage);
+    // Reserved
+    readBits(10, compressedImage);
+    /* Prediction metadata */
+    // Reserved
+    readBits(2, compressedImage);
+    // Preceding bands
+    parameters->precedingBands = readBits(4, compressedImage);
+    // Mode
+    parameters->mode = readBits(1, compressedImage);
+    // Reserved
+    readBits(1, compressedImage);
+    // Local sum mode, locked to neighbor
+    readBits(1, compressedImage);
+    // Reserved
+    readBits(1, compressedImage);
+    // Register size
+    parameters->registerSize = readBits(6, compressedImage);
+    // WeightResolution
+    parameters->weightResolution = readBits(4, compressedImage) + 4;
+    // Weight Interval
+    parameters->weightInterval = readBits(4, compressedImage) + 4;
+    // Weight min
+    parameters->weightMin = readBits(4, compressedImage) - 6;
+    // Weight max
+    parameters->weightMax = readBits(4, compressedImage) - 6;
+    // Reserved
+    readBits(1, compressedImage);
+    // Custom weight init is disabled for this implementation
+    // Weight init method
+    readBits(1, compressedImage);
+    // Weight init table
+    readBits(1, compressedImage);
+    // Weight init resolution 
+    readBits(5, compressedImage);
+    /* 
+        Entropy encoder metadata: For sample adaptive
+    */
+    parameters->uMax = readBits(5, compressedImage);
+    // Y star
+    parameters->yStar = readBits(3, compressedImage) + 4;
+    // Initial y
+    parameters->initialY = readBits(3, compressedImage);
+    // Init k
+    parameters->initialK = readBits(4, compressedImage);
+    // Acc init flag
+    readBits(1, compressedImage);
+    // Parameters defined by what is read in the file
+    parameters->sMin = 0;
+    parameters->sMax = (0x1 << parameters->dynamicRange) - 1;
+    parameters->sMid = 0x1 << (parameters->dynamicRange - 1);
 }

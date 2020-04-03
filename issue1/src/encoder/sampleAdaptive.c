@@ -38,3 +38,34 @@ int encodeSampleAdaptive(uint32_t sampleToEncode, uint16_t * counter, uint64_t *
     }
     return 0;
 }
+
+uint32_t decodeSampleAdaptive(uint16_t * counter, uint64_t * accumulator, uint16_t x, uint16_t y, uint16_t z, FILE * compressedImage, struct arguments * parameters) {
+    uint32_t tempSample = 0;
+    if(x == 0 && y == 0) {
+        initSampleEncoder(z, counter, accumulator, parameters);
+        tempSample = readBits(parameters->dynamicRange, compressedImage);
+        return tempSample;
+    } else {
+        long kValue = log2((accumulator[z] + ((49*counter[z]) >> 7)) / counter[z]);
+        kValue = kValue < 0 ? 0 : kValue;
+        kValue = kValue > (parameters->dynamicRange - 2) ? parameters->dynamicRange - 2 : kValue;
+        
+        uint16_t uValue = readNZeros(parameters->uMax, compressedImage);
+        if(uValue > parameters->uMax) {
+            tempSample = readBits(parameters->dynamicRange, compressedImage);
+        } else {
+            uint16_t tempBits = readBits(kValue, compressedImage);
+            tempSample = (uValue << kValue) | tempBits;
+        }
+
+        if(counter[z] < ((1 << parameters->yStar) - 1)) {
+                accumulator[z] += tempSample;
+                counter[z]++;
+            } else{
+                accumulator[z] = (accumulator[z] + tempSample + 1) >> 1;
+                counter[z] = (counter[z] + 1) >> 1;
+        }
+        return tempSample;        
+    }
+
+}

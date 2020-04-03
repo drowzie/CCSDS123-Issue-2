@@ -5,6 +5,7 @@ struct arguments {
     //NAME
     enum imageTypeEnum {BSQ = 0, BIP, BIL} imageOrder;
     enum imageTypeEnum encodeOrder;
+    enum { COMPRESS = 0, DECOMPRESS = 1} compressionMode;
     //
     enum { FULL = 0, REDUCED = 1 } mode;
     enum { UNSIGNED = 0, SIGNED = 1 } pixelType;
