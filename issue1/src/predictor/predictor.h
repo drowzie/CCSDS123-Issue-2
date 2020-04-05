@@ -10,8 +10,12 @@
 uint16_t predict(uint16_t * inputSample, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, int32_t * diffVector, int32_t * weights);
 
 int32_t innerProduct(int32_t * weightVector, int32_t * diffVector, uint16_t z, struct arguments * parameters);
-uint32_t computeScaledPredicted(uint16_t * sample, int32_t * weightVector, int32_t * diffVector, int32_t localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
+int32_t computeScaledPredicted(uint16_t * sample, int32_t * weightVector, int32_t * diffVector, int32_t localsum, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters);
 uint16_t computeMappedResidual(uint16_t sample, uint32_t scaledPredicted, struct arguments * parameters);
+
+uint32_t unPredict(uint16_t * inputSample, uint16_t mappedResidual, uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters, int32_t * diffVector, int32_t * weights);
+int32_t inverseMappedResidual(uint32_t mappedResidual, uint64_t predictedSample, uint32_t scaledPredicted, struct arguments * parameters);
+
 
 // Local Diffrences Chapter 4.5
 int32_t centralLocalDiffrence(uint16_t * sample,  uint16_t x, uint16_t y, uint16_t z, int32_t localsum, struct arguments * parameters);
@@ -32,4 +36,5 @@ int32_t wideColumnLocalSum(uint16_t * sample,  uint16_t x, uint16_t y, uint16_t 
 int offset(uint16_t x, uint16_t y, uint16_t z, struct arguments * args);
 int64_t modR(int64_t x, int64_t R);
 int sgn(int64_t x);
+int sgnPlus(int64_t x);
 

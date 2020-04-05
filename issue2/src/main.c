@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
 		Begin Compression
 	*/
 	printf("Computing X: %d, Y: %d, Z: %d \n", parameters.xSize, parameters.ySize, parameters.zSize);
+	printf("Maximum error is %d \n", parameters.maximumError);
 	start = walltime();
 	if (parameters.compressionMode == COMPRESS) {
 		if(parameters.encodeOrder == BSQ) {

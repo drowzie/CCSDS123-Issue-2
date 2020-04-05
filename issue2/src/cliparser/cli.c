@@ -30,9 +30,8 @@ static struct argp_option options[] = {
     { "inputFILE", 'i', "FILE", 0, "FILENAME"},
     { "Theta", 'T', "theta", 0, "Lossy compression parameter"},
     { "MaximumError", 'm', "error", 0, "Lossy compression parameter"},
-    { "interbandoffset", 'B', "interbandOffset", 0, "Lossy compression parameter"},
     { "sampleOffset", 'S', "sampleOffset", 0, "Lossy compression parameter"},
-    { "interexponent", 'E', "interbandExponent", 0, "Lossy compression parameter"},
+    { "sampleOffset", 'D', "sampleOffset", 0, "Lossy compression parameter"},
     { 0 } 
 };
 
@@ -59,9 +58,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'z': arguments->zSize = atoi(arg); break;
     case 'T': arguments->theta = atoi(arg); break;
     case 'm': arguments->maximumError = atoi(arg); break;
-    case 'B': arguments->interbandOffset = atoi(arg); break;
     case 'S': arguments->sampleOffset = atoi(arg); break;
-    case 'E': arguments->intrabandExponent = atoi(arg); break;
+    case 'D': arguments->sampleDamping = atoi(arg); break;
     case ARGP_KEY_ARG: return 0;
     default: return ARGP_ERR_UNKNOWN;
     }   

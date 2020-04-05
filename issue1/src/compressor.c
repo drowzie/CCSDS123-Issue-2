@@ -1,4 +1,4 @@
-#include <omp.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -54,6 +54,18 @@ int compressImage(uint16_t * image, uint8_t * compressedImage, unsigned int * to
 				}
 			}
 		}
+	} else if(parameters->encodeOrder == BIL) {
+		for (uint16_t y = 0; y < parameters->ySize; y++) {
+			for (uint16_t x = 0; x < parameters->zSize; x++) {
+				for (uint16_t z = 0; z < parameters->xSize; z++) {
+					uint32_t residuals = predict(image, x, y, z, parameters, diffVector, weights);
+					encodeSampleAdaptive(residuals, counter, accumulator, x, y, z, totalWrittenBytes, &numWrittenBits, compressedImage, parameters);
+				}
+			}
+		}
+	} else {
+		printf("Illeagal encoding order \n");
+		exit(1);
 	}
 	/* 
 		Fill the final bits to reach the word size of the computer

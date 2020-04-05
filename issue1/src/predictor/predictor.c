@@ -15,7 +15,7 @@ uint16_t predict(uint16_t * inputSample, uint16_t x, uint16_t y, uint16_t z, str
 	/* 
 		Step for calculating prediction sample and scaledPredicted
 	*/
-	uint32_t scaledPredicted = computeScaledPredicted(inputSample, weights, diffVector, wideNeighborLocalSum(inputSample, x, y, z, parameters), x, y, z, parameters);
+	int32_t scaledPredicted = computeScaledPredicted(inputSample, weights, diffVector, wideNeighborLocalSum(inputSample, x, y, z, parameters), x, y, z, parameters);
 
 	/* 
 	 	Update weights
@@ -54,10 +54,10 @@ uint16_t computeMappedResidual(uint16_t sample, uint32_t scaledPredicted, struct
 	CCSDS 123 Issue 1 Chapter 4.7
  */
 
-uint32_t computeScaledPredicted(uint16_t * sample, int32_t * weightVector, int32_t * diffVector, int32_t localsum,
+int32_t computeScaledPredicted(uint16_t * sample, int32_t * weightVector, int32_t * diffVector, int32_t localsum,
  	uint16_t x, uint16_t y, uint16_t z, struct arguments * parameters) {
 
-	uint32_t scaledPredicted = 0;
+	int32_t scaledPredicted = 0;
 	if(x+y == 0) {
 		if(z == 0 || parameters->precedingBands == 0) {
 			scaledPredicted = parameters->sMid << 1;

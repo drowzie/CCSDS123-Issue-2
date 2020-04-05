@@ -3,6 +3,7 @@
 
 struct arguments {
     //NAME
+    char *fileName;
     enum imageTypeEnum {BSQ = 0, BIP, BIL} imageOrder;
     enum imageTypeEnum encodeOrder;
     enum { COMPRESS = 0, DECOMPRESS = 1} compressionMode;

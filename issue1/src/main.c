@@ -20,29 +20,41 @@ int main(int argc, char **argv) {
 	/*
 		Mallocs related to compressions
 	*/
-	uint16_t * sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint16_t));
+	uint16_t * sample = NULL;
 	//Output compressed image 
 	uint8_t * compressedImage = malloc(((parameters.dynamicRange + 7)/8)*parameters.xSize*parameters.ySize*parameters.zSize);
 	//Files to write 
-	FILE * residuals_file = fopen("Encoded.bin", "w+b");
-	readIntSamples(&parameters, "../issue2/HICO_L1B_1.BSQ", sample);
+	FILE * residuals_file;
+	FILE * decompressedFile;
+	
+	
+	if(parameters.compressionMode == COMPRESS) {
+		sample = malloc(parameters.xSize*parameters.ySize*parameters.zSize*sizeof(uint16_t));
+		residuals_file = fopen("Encoded.raw", "w+b");
+		readIntSamples(&parameters, parameters.fileName, sample);
+	} else {
+		decompressedFile = fopen("DecompressedFile.raw", "wb");
+		residuals_file = fopen(parameters.fileName, "rb");
+	}
+
 	/* --------------------
 		COMPRESSION
 	-----------------------*/
 	unsigned int totalWrittenBytes = 0;
 	printf("Computing: \n Encode order: %d Offset order: %d \n", parameters.encodeOrder, parameters.imageOrder);
 	start = walltime();
-	int error = compressImage(sample, compressedImage, &totalWrittenBytes, &parameters);
-	if(error) {
-		printf("Compression done fucked \n");
-		exit(error);
+
+	if(parameters.compressionMode == COMPRESS) {
+		int error = compressImage(sample, compressedImage, &totalWrittenBytes, &parameters);
+		if(error) {
+			printf("Compression did not complete \n");
+			exit(error);
+		}
+		fwrite(compressedImage, 1, totalWrittenBytes, residuals_file);
+	} else {
+		int error = decompressImage(residuals_file, decompressedFile, &parameters);
 	}
 	computeTime += walltime() - start;
-	/* 
-		END OF COMPRESSION
-	*/
-
-	fwrite(compressedImage, 1, totalWrittenBytes, residuals_file);
 
 	printf("\n");
 	printf("Compute time:          %4.6f s\n",computeTime);
