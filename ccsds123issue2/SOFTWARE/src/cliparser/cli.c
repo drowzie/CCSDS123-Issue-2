@@ -59,9 +59,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'r': arguments->registerSize = atoi(arg); break;
     case 'f': arguments->mode = FULL; break;
     case 'p': arguments->precedingBands = atoi(arg) < 0 ? 0 : atoi(arg) > 15 ? 15 : atoi(arg)  ; break;
-    case 'x': arguments->xSize = atoi(arg); break;
-    case 'y': arguments->ySize = atoi(arg); break;
-    case 'z': arguments->zSize = atoi(arg); break;
+    case 'x': arguments->xSize = (int16_t)atoi(arg); break;
+    case 'y': arguments->ySize = (int16_t)atoi(arg); break;
+    case 'z': arguments->zSize = (int16_t)atoi(arg); break;
     case 'T': arguments->theta = atol(arg); break;
     case 'C': arguments->fidelityControl = atoi(arg); break;
     case 'm': arguments->maximumError = atol(arg); break;
