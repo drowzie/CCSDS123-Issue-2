@@ -1,5 +1,7 @@
 # CCSDS123 Issue 2
-
+An implementation of CCSDS 123 Issue 2. An hybrid encoder is implemented but the decoder is not implemented yet(soon(tm)).
+If compiling with warnings enabled (eg Wall) there will be loads of errors because 6 months in this project i found out that it was not enabled during development.
+Sample adaptive works perfectly.
 ## Building the program using CMAKE
 Requirements:
 * CMAKE
