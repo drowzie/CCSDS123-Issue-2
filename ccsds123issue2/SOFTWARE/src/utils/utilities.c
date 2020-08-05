@@ -7,24 +7,24 @@
 /*
     Read Integer samples into memory
  */
-int readIntSamples(struct arguments * parameters, char fileName[128], uint32_t * samples) {
+int readIntSamples(struct arguments * arg, char fileName[128], uint32_t * samples) {
     int32_t buffer = 0;
     FILE * sampleFile = fopen(fileName, "r+b");
     uint64_t readbytes = 0;
-    int bytestoread = parameters->pixelSize / 8;
+    int bytestoread = arg->pixelSize / 8;
     while(fread(&buffer, 1, bytestoread, sampleFile) == bytestoread){
       // Big endian to Little Endian
-      if(parameters->endianess == BE) {
+      if(arg->endianess == BE) {
         buffer = __builtin_bswap16(buffer);
       }
-  		if(parameters->pixelType == SIGNED) {
-        samples[readbytes] = buffer + parameters->sMid;
+  		if(arg->pixelType == SIGNED) {
+        samples[readbytes] = buffer + arg->sMid;
   		} else {
   			samples[readbytes] = buffer;
   		}
       readbytes++;
-    } 
-    
+    }
+
     fclose(sampleFile);
     return 0;
 }

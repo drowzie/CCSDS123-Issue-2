@@ -5,8 +5,8 @@ include(cmake/PreventInSourceBuilds.cmake)
 
 # enable cache system
 include(cmake/Cache.cmake)
-#include(cmake/CompilerWarnings.cmake)
+include(cmake/CompilerWarnings.cmake)
 
 include_directories(src)
 add_subdirectory(src binaries)
-#set_project_warnings(ccsds)
+set_project_warnings(ccsds)

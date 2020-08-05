@@ -144,8 +144,7 @@ uint32_t sampleRepresentation(uint32_t * sample, uint64_t clippedBinCenter, uint
         doubleResSample = (((1LL << arg->theta) - arg->sampleDamping) <<2) * ((clippedBinCenter << arg->weightResolution) - ((sgn(quantizedSample) * maximumError * arg->sampleOffset) << (arg->weightResolution - arg->theta)));
         doubleResSample += ((arg->sampleDamping * highResPredSample) - (arg->sampleDamping << (arg->weightResolution + 1)));
         doubleResSample = doubleResSample >> (arg->weightResolution + arg->theta + 1);
-		doubleResSample = (doubleResSample + 1) >> 1;
-		int test = 0;
+				doubleResSample = (doubleResSample + 1) >> 1;
         return doubleResSample;
     }
 }

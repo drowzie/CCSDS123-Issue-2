@@ -98,7 +98,7 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
     arguments->debugMode = 0;
     arguments->sumType = 2;
     arguments->registerSize = 64;
-    // Lossy copmression parameters
+    // Lossy copmression arg
     arguments->theta = 0;
     arguments->fidelityControl = ABSOLUTE;
     arguments->maximumError = 1<<10;
@@ -133,23 +133,23 @@ void parseArguments(int argc, char **argv, struct arguments * arguments) {
 
 
 
-void printParameters(struct arguments * parameters) {
+void printParameters(struct arguments * arg) {
     printf("#################################################################### \n");
-    printf("####################IMAGE PARAMETERS################################ \n");
-    printf("Computing X: %d, Y: %d, Z: %d \n", parameters->xSize, parameters->ySize, parameters->zSize);
-    printf("Image encoding order: %d , Reading image as %d (0=BSQ, 1=BIP, 2=BIL)\n", parameters->encodeOrder, parameters->imageOrder );
-    printf("####################PREDICTOR PARAMETERS############################ \n");
-	printf("Smax %lu, Smid %lu, smin %lu \n", parameters->sMax, parameters->sMid, parameters->sMin);
-	printf("Dyn range %d Register size is %u \n", parameters->dynamicRange, parameters->registerSize);
-    printf("WEIGHT RESOLUTION: %d \n", parameters->weightResolution);
-    printf("Weight min: %d, Weight max: %d \n", parameters->weightMin, parameters->weightMax);
-    printf("Weight interval %d \n", parameters->weightInterval);
-    printf("AbsoluteError is %d, Relative Error is %d \n", parameters->maximumError, parameters->relativeError);
-    printf("PRECEDING BANDS: %d \n", parameters->precedingBands);
-    printf("####################ENCODER PARAMETERS############################## \n");
-    printf(" UMAX : %d \n", parameters->uMax);
-    printf("Counter init %d, Counterrescaling %d \n", parameters->initialY, parameters->yStar);
-    printf(" Accumulator init %d \n", parameters->initialK);
+    printf("####################IMAGE arg################################ \n");
+    printf("Computing X: %d, Y: %d, Z: %d \n", arg->xSize, arg->ySize, arg->zSize);
+    printf("Image encoding order: %d , Reading image as %d (0=BSQ, 1=BIP, 2=BIL)\n", arg->encodeOrder, arg->imageOrder );
+    printf("####################PREDICTOR arg############################ \n");
+	printf("Smax %lu, Smid %lu, smin %lu \n", arg->sMax, arg->sMid, arg->sMin);
+	printf("Dyn range %d Register size is %u \n", arg->dynamicRange, arg->registerSize);
+    printf("WEIGHT RESOLUTION: %d \n", arg->weightResolution);
+    printf("Weight min: %d, Weight max: %d \n", arg->weightMin, arg->weightMax);
+    printf("Weight interval %d \n", arg->weightInterval);
+    printf("AbsoluteError is %d, Relative Error is %d \n", arg->maximumError, arg->relativeError);
+    printf("PRECEDING BANDS: %d \n", arg->precedingBands);
+    printf("####################ENCODER arg############################## \n");
+    printf(" UMAX : %d \n", arg->uMax);
+    printf("Counter init %d, Counterrescaling %d \n", arg->initialY, arg->yStar);
+    printf(" Accumulator init %d \n", arg->initialK);
     printf("#################################################################### \n");
 
 }
