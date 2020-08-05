@@ -130,12 +130,12 @@ int main(int argc, char **argv) {
 						if(arg.pixelType == SIGNED) {
 							int32_t signedSample =  decompressedSample - arg.sMid;
 							if(arg.endianess == BE) {
-								signedSample = __builtin_bswap16(signedSample);
+								signedSample = __builtin_bswap32(signedSample);
 							}
 							fwrite(&signedSample, 2, 1, decompressedFile);
 						} else {
 							if(arg.endianess == BE) {
-								decompressedSample = __builtin_bswap16(decompressedSample);
+								decompressedSample = __builtin_bswap32(decompressedSample);
 							}
 							fwrite(&decompressedSample, 2, 1, decompressedFile);
 						}

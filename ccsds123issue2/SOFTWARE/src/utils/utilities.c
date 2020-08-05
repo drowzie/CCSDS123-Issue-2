@@ -15,7 +15,7 @@ int readIntSamples(struct arguments * arg, char fileName[128], uint32_t * sample
     while(fread(&buffer, 1, bytestoread, sampleFile) == bytestoread){
       // Big endian to Little Endian
       if(arg->endianess == BE) {
-        buffer = __builtin_bswap16(buffer);
+        buffer = __builtin_bswap32(buffer);
       }
   		if(arg->pixelType == SIGNED) {
         samples[readbytes] = buffer + arg->sMid;
