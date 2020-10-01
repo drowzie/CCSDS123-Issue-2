@@ -1,7 +1,5 @@
 # CCSDS123 Issue 2
-An implementation of CCSDS 123 Issue 2. An hybrid encoder is implemented but the decoder is not implemented yet(soon(tm)).
-If compiling with warnings enabled (eg Wall) there will be loads of errors because 6 months in this project i found out that it was not enabled during development.
-Sample adaptive works perfectly.
+An implementation of CCSDS 123 Issue 2. The hybrid encoder is implemented but the decoder is not implemented as there was little to no time by the time i had to write the thesis. Sample adaptive works but not crossing from BSQ to BIP/Decoding BSQ to BIP...etc. The same problem is also in Issue 1 in this repository. This project should work as a reference to build upon where i have done some testing with the reference images/compressed images provided by CCSDS. There is support for reading 16bit/32bit big endian/low endian but i did not insert it into the available arguments for when to use 16/32 in the code. One would have to manually change the conversion function in the code if used. 
 ## Building the program using CMAKE
 Requirements:
 * CMAKE
